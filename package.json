@@ -25,6 +25,11 @@
     "zone.js": "~0.14.3"
   },
   "devDependencies": {
+    "browser": {
+      "fs": false,
+      "os": false,
+      "path": false
+    },
     "@angular-devkit/build-angular": "^18.0.4",
     "@angular/cli": "^18.0.4",
     "@angular/compiler-cli": "^18.0.0",
