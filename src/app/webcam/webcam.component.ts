@@ -25,11 +25,10 @@ export class WebcamComponent implements OnInit {
   videoInput: any;
 
   async ngOnInit() {
-    await Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri('../../assets/models'),
-      await faceapi.nets.faceLandmark68Net.loadFromUri('../../assets/models'),
-      await faceapi.nets.faceRecognitionNet.loadFromUri('../../assets/models'),
-      await faceapi.nets.faceExpressionNet.loadFromUri('../../assets/models'),
+    Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri('/assets/models'),
+      faceapi.nets.faceRecognitionNet.loadFromUri('/assets/models'),
+      faceapi.nets.faceExpressionNet.loadFromUri('/assets/models'),
     ]).then(() => this.startVideo());
   }
 
@@ -67,7 +66,6 @@ export class WebcamComponent implements OnInit {
               this.videoInput,
               new faceapi.TinyFaceDetectorOptions()
             )
-            .withFaceLandmarks()
             .withFaceExpressions();
           this.resizedDetections = faceapi.resizeResults(
             this.detection,
@@ -77,7 +75,6 @@ export class WebcamComponent implements OnInit {
             .getContext('2d')
             .clearRect(0, 0, this.canvas.width, this.canvas.height);
           faceapi.draw.drawDetections(this.canvas, this.resizedDetections);
-          faceapi.draw.drawFaceLandmarks(this.canvas, this.resizedDetections);
           faceapi.draw.drawFaceExpressions(this.canvas, this.resizedDetections);
         }, 100);
       });
