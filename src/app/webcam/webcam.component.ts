@@ -9,6 +9,16 @@ import * as faceapi from 'face-api.js';
   styleUrl: './webcam.component.css',
 })
 export class WebcamComponent implements OnInit {
+  highestExpressions: any[] = [];
+  avgExpressions: string[] = [];
+  predictedAges: number[] = [];
+  avgAges: number[] = [];
+  predictedGenders: string[] = [];
+  avgGenders: string[] = [];
+  numOfFacesDetected: number[] = [];
+  avgNumOfFacesDetected: number[] = [];
+  faceCoverSecondsCount = 0;
+
   WIDTH = 440;
   HEIGHT = 280;
   @ViewChild('video')
@@ -27,8 +37,9 @@ export class WebcamComponent implements OnInit {
   async ngOnInit() {
     Promise.all([
       faceapi.nets.tinyFaceDetector.loadFromUri('/assets/models'),
-      faceapi.nets.faceRecognitionNet.loadFromUri('/assets/models'),
       faceapi.nets.faceExpressionNet.loadFromUri('/assets/models'),
+      faceapi.nets.ssdMobilenetv1.loadFromUri('/assets/models'),
+      faceapi.nets.ageGenderNet.loadFromUri('/assets/models'),
     ]).then(() => this.startVideo());
   }
 
@@ -41,6 +52,103 @@ export class WebcamComponent implements OnInit {
     this.detect_Faces();
   }
 
+  saveTopExpression(detections: any[]) {
+    detections.forEach((detection) => {
+      const expressions = detection.expressions;
+      const expressionsArray = Object.entries(expressions);
+      expressionsArray.sort((a: any, b: any) => b[1] - a[1]);
+      let topExpression = expressionsArray[0];
+      this.highestExpressions.push({
+        time: Date.now(),
+        expression: topExpression,
+        face: detection.detection.box,
+      });
+    });
+  }
+
+  saveAvgExpression() {
+    const expressionsCount: { [key: string]: number } = {
+      neutral: 0,
+      happy: 0,
+      sad: 0,
+      angry: 0,
+      fearful: 0,
+      disgusted: 0,
+      surprised: 0,
+    };
+
+    const highestExpressionsCopy = [...this.highestExpressions];
+
+    highestExpressionsCopy.forEach((expr) => {
+      expressionsCount[expr.expression[0]]++;
+    });
+
+    const counts = Object.values(expressionsCount);
+    const maxCount = Math.max(...counts);
+
+    const avgExpression = Object.keys(expressionsCount).find(
+      (expression) => expressionsCount[expression] === maxCount
+    );
+
+    this.highestExpressions = [];
+    if (avgExpression) {
+      this.avgExpressions.push(avgExpression);
+    }
+  }
+
+  interpolateAgePredictions(age: number): number {
+    this.predictedAges = [age].concat(this.predictedAges).slice(0, 30);
+    const avgPredictedAge =
+      this.predictedAges.reduce((total, a) => total + a, 0) /
+      this.predictedAges.length;
+    return avgPredictedAge;
+  }
+
+  saveAvgAge() {
+    let lastTenPredictedAges = this.predictedAges.slice(-10);
+    let sum = lastTenPredictedAges.reduce((acc, val) => acc + val, 0);
+    let avgAge = sum / lastTenPredictedAges.length;
+    this.avgAges.push(avgAge);
+  }
+
+  saveGender(detections: any[]) {
+    this.predictedGenders.push(detections[0].gender);
+  }
+
+  saveAvgGender() {
+    const predictedGendersCopy = [...this.predictedGenders];
+    let maleCount = 0;
+    let femaleCount = 0;
+    for (let gender of predictedGendersCopy) {
+      if (gender === 'male') maleCount++;
+      else femaleCount++;
+    }
+
+    let avgGender = maleCount >= femaleCount ? 'male' : 'female';
+
+    this.predictedGenders = [];
+    this.avgGenders.push(avgGender);
+  }
+
+  saveNumOfFacesDetected(detections: any[]) {
+    this.numOfFacesDetected.push(detections.length);
+  }
+
+  saveAvgNumOfFacesDetected() {
+    const numOfFacesDetectedCopy = [...this.numOfFacesDetected];
+    let sum = numOfFacesDetectedCopy.reduce((acc, val) => acc + val, 0);
+    let avgNum = sum / numOfFacesDetectedCopy.length;
+
+    this.numOfFacesDetected = [];
+    this.avgNumOfFacesDetected.push(avgNum);
+  }
+
+  alertUser() {
+    this.faceCoverSecondsCount++;
+    // You might want to implement a non-blocking alert here
+    console.log(`The face was covered for ${this.faceCoverSecondsCount}s`);
+  }
+
   async detect_Faces() {
     this.elRef.nativeElement
       .querySelector('video')
@@ -49,34 +157,61 @@ export class WebcamComponent implements OnInit {
         this.canvasEl = this.canvasRef.nativeElement;
         this.canvasEl.appendChild(this.canvas);
         this.canvas.setAttribute('id', 'canvass');
-        this.canvas.setAttribute(
-          'style',
-          `position: fixed;
-        top: 0;
-        left: 0;`
-        );
+        this.canvas.setAttribute('style', `position: fixed; top: 0; left: 0;`);
         this.displaySize = {
           width: this.videoInput.width,
           height: this.videoInput.height,
         };
         faceapi.matchDimensions(this.canvas, this.displaySize);
+
         setInterval(async () => {
           this.detection = await faceapi
             .detectAllFaces(
               this.videoInput,
-              new faceapi.TinyFaceDetectorOptions()
+              new faceapi.SsdMobilenetv1Options()
             )
-            .withFaceExpressions();
+            .withFaceExpressions()
+            .withAgeAndGender();
+
           this.resizedDetections = faceapi.resizeResults(
             this.detection,
             this.displaySize
           );
+
           this.canvas
             .getContext('2d')
             .clearRect(0, 0, this.canvas.width, this.canvas.height);
           faceapi.draw.drawDetections(this.canvas, this.resizedDetections);
           faceapi.draw.drawFaceExpressions(this.canvas, this.resizedDetections);
-        }, 100);
+
+          this.resizedDetections.forEach((detection: any) => {
+            const { age, gender, genderProbability } = detection;
+            const interpolatedAge = this.interpolateAgePredictions(age);
+
+            new faceapi.draw.DrawTextField(
+              [
+                `${Math.round(interpolatedAge)} years`,
+                `${gender} (${faceapi.utils.round(genderProbability)})`,
+              ],
+              detection.detection.box.bottomRight
+            ).draw(this.canvas);
+          });
+
+          if (this.resizedDetections.length === 0) {
+            this.alertUser();
+          } else {
+            this.saveTopExpression(this.resizedDetections);
+            this.saveGender(this.resizedDetections);
+          }
+          this.saveNumOfFacesDetected(this.resizedDetections);
+        }, 1000);
+
+        setInterval(() => this.saveAvgExpression(), 180000); // 3 minutes
+        setInterval(() => {
+          this.saveAvgAge();
+          this.saveAvgGender();
+        }, 10000); // 10 seconds
+        setInterval(() => this.saveAvgNumOfFacesDetected(), 5000); // 5 seconds
       });
   }
 }
