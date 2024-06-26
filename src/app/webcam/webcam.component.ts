@@ -9,15 +9,15 @@ import * as faceapi from 'face-api.js';
   styleUrl: './webcam.component.css',
 })
 export class WebcamComponent implements OnInit {
-  highestExpressions: any[] = [];
-  avgExpressions: string[] = [];
-  predictedAges: number[] = [];
-  avgAges: number[] = [];
-  predictedGenders: string[] = [];
-  avgGenders: string[] = [];
-  numOfFacesDetected: number[] = [];
-  avgNumOfFacesDetected: number[] = [];
-  faceCoverSecondsCount = 0;
+  highestExpressions: any[] = []; // Saves the highest expression every second for 3m (then resets)
+  avgExpressions: string[] = []; // Saves the average expression detected over 3-minute intervals
+  predictedAges: number[] = []; // Saves the last 30 predicted ages
+  avgAges: number[] = []; // Saves the average age calculated over 10-seconds intervals
+  predictedGenders: string[] = []; // Saves the predicted genders every second for 10s (then resets)
+  avgGenders: string[] = []; // Saves the average gender calculated over 10-seconds intervals
+  numOfFacesDetected: number[] = []; // Saves the # of faces detected every second for 5s (then resets)
+  avgNumOfFacesDetected: number[] = []; // Save the average # of faces detected over 5-seconds intervals
+  faceCoverSecondsCount = 0; // Saves the cumulative time in seconds that the face was covered
 
   WIDTH = 440;
   HEIGHT = 280;
@@ -34,15 +34,17 @@ export class WebcamComponent implements OnInit {
   displaySize: any;
   videoInput: any;
 
+  // Loading the models
   async ngOnInit() {
     Promise.all([
+      faceapi.nets.ssdMobilenetv1.loadFromUri('/assets/models'),
       faceapi.nets.tinyFaceDetector.loadFromUri('/assets/models'),
       faceapi.nets.faceExpressionNet.loadFromUri('/assets/models'),
-      faceapi.nets.ssdMobilenetv1.loadFromUri('/assets/models'),
       faceapi.nets.ageGenderNet.loadFromUri('/assets/models'),
     ]).then(() => this.startVideo());
   }
 
+  // Asks for webcam permission
   startVideo() {
     this.videoInput = this.video.nativeElement;
     navigator.mediaDevices
@@ -52,6 +54,7 @@ export class WebcamComponent implements OnInit {
     this.detect_Faces();
   }
 
+  // Saves the top expression at each detection
   saveTopExpression(detections: any[]) {
     detections.forEach((detection) => {
       const expressions = detection.expressions;
@@ -64,8 +67,12 @@ export class WebcamComponent implements OnInit {
         face: detection.detection.box,
       });
     });
+
+    // console.log("Top Expression:", topExpression);
+    // console.log("All Highest Expressions:", highestExpressions);
   }
 
+  // Saves the average expression (called every 3 minutes)
   saveAvgExpression() {
     const expressionsCount: { [key: string]: number } = {
       neutral: 0,
@@ -93,9 +100,11 @@ export class WebcamComponent implements OnInit {
     this.highestExpressions = [];
     if (avgExpression) {
       this.avgExpressions.push(avgExpression);
+      // console.log(`The average face expression after 3m is "${avgExpression}"`);
     }
   }
 
+  // Interpolates age predictions
   interpolateAgePredictions(age: number): number {
     this.predictedAges = [age].concat(this.predictedAges).slice(0, 30);
     const avgPredictedAge =
@@ -104,22 +113,26 @@ export class WebcamComponent implements OnInit {
     return avgPredictedAge;
   }
 
+  // Saves the average age (called every 10 seconds)
   saveAvgAge() {
     let lastTenPredictedAges = this.predictedAges.slice(-10);
     let sum = lastTenPredictedAges.reduce((acc, val) => acc + val, 0);
     let avgAge = sum / lastTenPredictedAges.length;
     this.avgAges.push(avgAge);
+    // console.log(`The average age after 10s is "${avgAge}"`);
   }
 
+  // Saves the gender at each detection
   saveGender(detections: any[]) {
     this.predictedGenders.push(detections[0].gender);
   }
 
+  // Saves the average gender (called every 10 seconds)
   saveAvgGender() {
     const predictedGendersCopy = [...this.predictedGenders];
     let maleCount = 0;
     let femaleCount = 0;
-    for (let gender of predictedGendersCopy) {
+    for (const gender of predictedGendersCopy) {
       if (gender === 'male') maleCount++;
       else femaleCount++;
     }
@@ -128,12 +141,15 @@ export class WebcamComponent implements OnInit {
 
     this.predictedGenders = [];
     this.avgGenders.push(avgGender);
+    // console.log(`The average gender after 10s is "${avgGender}"`);
   }
 
+  // Saves number of faces detected
   saveNumOfFacesDetected(detections: any[]) {
     this.numOfFacesDetected.push(detections.length);
   }
 
+  // Saves the average number of faces detected (called every 5)
   saveAvgNumOfFacesDetected() {
     const numOfFacesDetectedCopy = [...this.numOfFacesDetected];
     let sum = numOfFacesDetectedCopy.reduce((acc, val) => acc + val, 0);
@@ -141,11 +157,13 @@ export class WebcamComponent implements OnInit {
 
     this.numOfFacesDetected = [];
     this.avgNumOfFacesDetected.push(avgNum);
+    // console.log(`The average number of face detected after 5s is "${avgNum}"`);
   }
 
+  // Alerts the user if their faces isn't visible + increments faceCoverSecondsCount
   alertUser() {
     this.faceCoverSecondsCount++;
-    // You might want to implement a non-blocking alert here
+    // alert("No face detected! Please ensure your face is visible to the camera."); // Could be changed afterwards since alert() stops the execution of the program
     console.log(`The face was covered for ${this.faceCoverSecondsCount}s`);
   }
 
