@@ -66,10 +66,10 @@ export class WebcamComponent implements OnInit {
         expression: topExpression,
         face: detection.detection.box,
       });
+      // console.log("Top Expression:", topExpression);
+      // console.log("All Highest Expressions:", this.highestExpressions);
     });
 
-    // console.log("Top Expression:", topExpression);
-    // console.log("All Highest Expressions:", highestExpressions);
   }
 
   // Saves the average expression (called every 3 minutes)
@@ -186,7 +186,7 @@ export class WebcamComponent implements OnInit {
           this.detection = await faceapi
             .detectAllFaces(
               this.videoInput,
-              new faceapi.SsdMobilenetv1Options()
+              new faceapi.SsdMobilenetv1Options() // or faceapi.TinyFaceDetectorOptions
             )
             .withFaceExpressions()
             .withAgeAndGender();
@@ -215,20 +215,26 @@ export class WebcamComponent implements OnInit {
             ).draw(this.canvas);
           });
 
+          // Alerts the user if their face isn't showing
           if (this.resizedDetections.length === 0) {
             this.alertUser();
           } else {
-            this.saveTopExpression(this.resizedDetections);
+            this.saveTopExpression(this.resizedDetections); // Saves the top face expression each interval
             this.saveGender(this.resizedDetections);
           }
           this.saveNumOfFacesDetected(this.resizedDetections);
-        }, 1000);
+        }, 1000); // Maybe make it every 0.5s (500ms)
 
-        setInterval(() => this.saveAvgExpression(), 180000); // 3 minutes
+        // Saves the average expression after 3m
+        setInterval(() => this.saveAvgExpression(), 5000); // Make it every 3m (180000ms)
+
+        // Saves the average age and gender every 10s
         setInterval(() => {
           this.saveAvgAge();
           this.saveAvgGender();
-        }, 10000); // 10 seconds
+        }, 5000); // Make it every 10s (10000ms)
+
+        // Saves the number of faces detected every 5s
         setInterval(() => this.saveAvgNumOfFacesDetected(), 5000); // 5 seconds
       });
   }
