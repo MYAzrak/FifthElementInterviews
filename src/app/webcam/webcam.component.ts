@@ -1,14 +1,17 @@
+import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { RouterModule } from '@angular/router';
 import * as faceapi from 'face-api.js';
 
 @Component({
   selector: 'app-webcam',
   standalone: true,
-  imports: [],
+  imports: [CommonModule, RouterModule],
   templateUrl: './webcam.component.html',
   styleUrl: './webcam.component.css',
 })
 export class WebcamComponent implements OnInit {
+  showWebcam: boolean = false;
   highestExpressions: any[] = []; // Saves the highest expression every second for 3m (then resets)
   avgExpressions: string[] = []; // Saves the average expression detected over 3-minute intervals
   predictedAges: number[] = []; // Saves the last 30 predicted ages
@@ -34,6 +37,15 @@ export class WebcamComponent implements OnInit {
   displaySize: any;
   videoInput: any;
 
+  // Change the name
+  onClickSwitchWebcam() {
+    this.showWebcam = !this.showWebcam;
+    if (this.showWebcam) {
+      this.startVideo();
+    }
+    console.log(this.showWebcam);
+  }
+
   // Loading the models
   async ngOnInit() {
     Promise.all([
@@ -41,9 +53,8 @@ export class WebcamComponent implements OnInit {
       faceapi.nets.tinyFaceDetector.loadFromUri('/assets/models'),
       faceapi.nets.faceExpressionNet.loadFromUri('/assets/models'),
       faceapi.nets.ageGenderNet.loadFromUri('/assets/models'),
-    ]).then(() => this.startVideo());
-      console.log('Webcam Component loaded');
-
+    ]);
+    console.log(this.showWebcam);
   }
 
   // Asks for webcam permission
@@ -71,7 +82,6 @@ export class WebcamComponent implements OnInit {
       // console.log("Top Expression:", topExpression);
       // console.log("All Highest Expressions:", this.highestExpressions);
     });
-
   }
 
   // Saves the average expression (called every 3 minutes)
