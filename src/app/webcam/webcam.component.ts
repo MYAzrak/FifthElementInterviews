@@ -42,6 +42,8 @@ export class WebcamComponent implements OnInit {
       faceapi.nets.faceExpressionNet.loadFromUri('/assets/models'),
       faceapi.nets.ageGenderNet.loadFromUri('/assets/models'),
     ]).then(() => this.startVideo());
+      console.log('Webcam Component loaded');
+
   }
 
   // Asks for webcam permission
