@@ -1,3 +1,9 @@
-<router-outlet>
-  <button routerLink="/webcam">Start!</button>
-</router-outlet>
+<main>
+  <a [routerLink]="['/']">
+    <header class="brand-name">
+    </header>
+  </a>
+  <section class="content">
+    <router-outlet></router-outlet>
+  </section>
+</main>

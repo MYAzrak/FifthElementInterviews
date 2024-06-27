@@ -1,9 +1,12 @@
-import { RouterModule, Routes } from '@angular/router';
+import { Routes } from '@angular/router';
+import { StartComponent } from './start/start.component';
 import { WebcamComponent } from './webcam/webcam.component';
-import { AppComponent } from './app.component';
 
 export const routes: Routes = [
-  { path: '', component: AppComponent },
-  { path: 'webcam', component: WebcamComponent },
+  {
+    path: '',
+    component: StartComponent,
+    title: `Start Recording`,
+  },
+  { path: 'webcam', component: WebcamComponent, title: `Recording Webcam` },
 ];
-
