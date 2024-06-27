@@ -43,7 +43,6 @@ export class WebcamComponent implements OnInit {
     if (this.showWebcam) {
       this.startVideo();
     }
-    console.log(this.showWebcam);
   }
 
   // Loading the models
@@ -54,7 +53,6 @@ export class WebcamComponent implements OnInit {
       faceapi.nets.faceExpressionNet.loadFromUri('/assets/models'),
       faceapi.nets.ageGenderNet.loadFromUri('/assets/models'),
     ]);
-    console.log(this.showWebcam);
   }
 
   // Asks for webcam permission
