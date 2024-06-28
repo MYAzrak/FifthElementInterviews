@@ -7,7 +7,7 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import * as faceapi from 'face-api.js';
 
 @Component({
@@ -179,19 +179,27 @@ export class WebcamComponent implements OnInit, AfterViewInit {
 
   // Sets a timer which directs to the statistics page after 5 minutes
   startTimer() {
-    const DURATION = 305; // 300s = 5m
+    const DURATION = 5; // 300s = 5m
     let timeLeft = DURATION;
     let minutes: number = 0;
     let seconds: number = 0;
 
     const timerDisplay = document.getElementById('timer');
     if (timerDisplay) {
-      window.setInterval(() => {
-        minutes = Math.trunc(timeLeft / 60);
-        seconds = Math.trunc(timeLeft % 60);
-        timerDisplay.textContent = `${minutes}:${seconds}`;
-        if (--timeLeft < 0) {
+      const interval = window.setInterval(() => {
+        let minutes = Math.floor(timeLeft / 60);
+        let seconds = timeLeft % 60;
+
+        timerDisplay.textContent = `${minutes}:${
+          seconds < 10 ? '0' + seconds : seconds
+        }`;
+
+        if (timeLeft-- < 0) {
+          clearInterval(interval); // Stop the interval
           timerDisplay.textContent = 'Directing to Statistics';
+          setTimeout(() => {
+            this.router.navigate(['/stats']); // Navigate to stats component
+          }, 1000); // 1000 milliseconds = 1 second
         }
       }, 1000);
     } else {
@@ -272,7 +280,11 @@ export class WebcamComponent implements OnInit, AfterViewInit {
       });
   }
 
-  constructor(private elRef: ElementRef, private cdRef: ChangeDetectorRef) {}
+  constructor(
+    private elRef: ElementRef,
+    private cdRef: ChangeDetectorRef,
+    private router: Router
+  ) {}
 
   ngAfterViewInit() {
     this.cdRef.detectChanges(); // Ensure detection cycle has run
