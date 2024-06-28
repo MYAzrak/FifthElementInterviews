@@ -180,11 +180,12 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     this.elRef.nativeElement
       .querySelector('video')
       .addEventListener('play', async () => {
-        this.canvas = await faceapi.createCanvasFromMedia(this.videoInput);
+        this.canvas = faceapi.createCanvasFromMedia(this.videoInput);
         this.canvasEl = this.canvasRef.nativeElement;
         this.canvasEl.appendChild(this.canvas);
+        
         this.canvas.setAttribute('id', 'canvass');
-        this.canvas.setAttribute('style', `position: fixed; top: 0; left: 0;`);
+        this.canvas.setAttribute('style', `position: absolute;`);
         this.displaySize = {
           width: this.videoInput.width,
           height: this.videoInput.height,
