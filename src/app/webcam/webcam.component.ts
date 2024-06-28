@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { RouterModule } from '@angular/router';
 import * as faceapi from 'face-api.js';
 
@@ -10,7 +17,8 @@ import * as faceapi from 'face-api.js';
   templateUrl: './webcam.component.html',
   styleUrl: './webcam.component.css',
 })
-export class WebcamComponent implements OnInit {
+export class WebcamComponent implements OnInit, AfterViewInit {
+  title = 'Recording Webcam';
   showWebcam: boolean = false;
   highestExpressions: any[] = []; // Saves the highest expression every second for 3m (then resets)
   avgExpressions: string[] = []; // Saves the average expression detected over 3-minute intervals
@@ -22,13 +30,12 @@ export class WebcamComponent implements OnInit {
   avgNumOfFacesDetected: number[] = []; // Save the average # of faces detected over 5-seconds intervals
   faceCoverSecondsCount = 0; // Saves the cumulative time in seconds that the face was covered
 
-  WIDTH = 440;
-  HEIGHT = 280;
+  WIDTH = 1080;
+  HEIGHT = 500;
   @ViewChild('video')
   public video!: ElementRef;
   @ViewChild('canvas')
   public canvasRef!: ElementRef;
-  constructor(private elRef: ElementRef) {}
   stream: any;
   detection: any;
   resizedDetections: any;
@@ -36,14 +43,6 @@ export class WebcamComponent implements OnInit {
   canvasEl: any;
   displaySize: any;
   videoInput: any;
-
-  // Change the name
-  onClickSwitchWebcam() {
-    this.showWebcam = !this.showWebcam;
-    if (this.showWebcam) {
-      this.startVideo();
-    }
-  }
 
   // Loading the models
   async ngOnInit() {
@@ -247,5 +246,19 @@ export class WebcamComponent implements OnInit {
         // Saves the number of faces detected every 5s
         setInterval(() => this.saveAvgNumOfFacesDetected(), 5000); // 5 seconds
       });
+  }
+
+  constructor(private elRef: ElementRef, private cdRef: ChangeDetectorRef) {}
+
+  ngAfterViewInit() {
+    this.cdRef.detectChanges(); // Ensure detection cycle has run
+  }
+
+  onClickSwitchWebcam() {
+    this.showWebcam = !this.showWebcam;
+    this.cdRef.detectChanges(); // Force change detection
+    if (this.showWebcam) {
+      this.startVideo();
+    }
   }
 }

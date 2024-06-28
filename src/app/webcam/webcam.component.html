@@ -1,7 +1,6 @@
 <button *ngIf="!showWebcam" (click)="onClickSwitchWebcam()" id="start">Start!</button>
-<router-outlet></router-outlet>
 
-<div class="video-container">
+<div class="video-container" *ngIf="showWebcam">
   <video #video [width]="WIDTH" [height]="HEIGHT" autoplay muted>
   </video>
   <div #canvas></div>
