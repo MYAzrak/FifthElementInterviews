@@ -62,6 +62,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
       .then((stream) => (this.videoInput.srcObject = stream))
       .catch((error) => console.log(error));
     this.detect_Faces();
+    this.startTimer();
   }
 
   // Saves the top expression at each detection
@@ -176,6 +177,28 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     console.log(`The face was covered for ${this.faceCoverSecondsCount}s`);
   }
 
+  // Sets a timer which directs to the statistics page after 5 minutes
+  startTimer() {
+    const DURATION = 305; // 300s = 5m
+    let timeLeft = DURATION;
+    let minutes: number = 0;
+    let seconds: number = 0;
+
+    const timerDisplay = document.getElementById('timer');
+    if (timerDisplay) {
+      window.setInterval(() => {
+        minutes = Math.trunc(timeLeft / 60);
+        seconds = Math.trunc(timeLeft % 60);
+        timerDisplay.textContent = `${minutes}:${seconds}`;
+        if (--timeLeft < 0) {
+          timerDisplay.textContent = 'Directing to Statistics';
+        }
+      }, 1000);
+    } else {
+      console.error('Timer display element not found');
+    }
+  }
+
   async detect_Faces() {
     this.elRef.nativeElement
       .querySelector('video')
@@ -183,7 +206,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
         this.canvas = faceapi.createCanvasFromMedia(this.videoInput);
         this.canvasEl = this.canvasRef.nativeElement;
         this.canvasEl.appendChild(this.canvas);
-        
+
         this.canvas.setAttribute('id', 'canvass');
         this.canvas.setAttribute('style', `position: absolute;`);
         this.displaySize = {
