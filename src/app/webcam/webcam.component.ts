@@ -8,6 +8,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
+import { DataService } from '../services/data.service';
 import * as faceapi from 'face-api.js';
 
 @Component({
@@ -18,7 +19,6 @@ import * as faceapi from 'face-api.js';
   styleUrl: './webcam.component.css',
 })
 export class WebcamComponent implements OnInit, AfterViewInit {
-  title = 'Recording Webcam';
   showWebcam: boolean = false;
   highestExpressions: any[] = []; // Saves the highest expression every second for 3m (then resets)
   avgExpressions: string[] = []; // Saves the average expression detected over 3-minute intervals
@@ -43,6 +43,13 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   canvasEl: any;
   displaySize: any;
   videoInput: any;
+
+  constructor(
+    private elRef: ElementRef,
+    private cdRef: ChangeDetectorRef,
+    private router: Router,
+    private dataService: DataService
+  ) {}
 
   // Loading the models
   async ngOnInit() {
@@ -112,6 +119,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
       this.avgExpressions.push(avgExpression);
       // console.log(`The average face expression after 3m is "${avgExpression}"`);
     }
+    this.dataService.updateAvgExpressions(this.avgExpressions);
   }
 
   // Interpolates age predictions
@@ -130,6 +138,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     let avgAge = sum / lastTenPredictedAges.length;
     this.avgAges.push(avgAge);
     // console.log(`The average age after 10s is "${avgAge}"`);
+    this.dataService.updateAvgAges(this.avgAges);
   }
 
   // Saves the gender at each detection
@@ -152,6 +161,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     this.predictedGenders = [];
     this.avgGenders.push(avgGender);
     // console.log(`The average gender after 10s is "${avgGender}"`);
+    this.dataService.updateAvgGenders(this.avgGenders);
   }
 
   // Saves number of faces detected
@@ -168,6 +178,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     this.numOfFacesDetected = [];
     this.avgNumOfFacesDetected.push(avgNum);
     // console.log(`The average number of face detected after 5s is "${avgNum}"`);
+    this.dataService.updateAvgNumOfFacesDetected(this.avgNumOfFacesDetected);
   }
 
   // Alerts the user if their faces isn't visible + increments faceCoverSecondsCount
@@ -175,6 +186,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     this.faceCoverSecondsCount++;
     // alert("No face detected! Please ensure your face is visible to the camera."); // Could be changed afterwards since alert() stops the execution of the program
     console.log(`The face was covered for ${this.faceCoverSecondsCount}s`);
+    this.dataService.updateFaceCoverSecondsCount(this.faceCoverSecondsCount);
   }
 
   // Sets a timer which directs to the statistics page after 5 minutes
@@ -279,12 +291,6 @@ export class WebcamComponent implements OnInit, AfterViewInit {
         setInterval(() => this.saveAvgNumOfFacesDetected(), 5000); // 5 seconds
       });
   }
-
-  constructor(
-    private elRef: ElementRef,
-    private cdRef: ChangeDetectorRef,
-    private router: Router
-  ) {}
 
   ngAfterViewInit() {
     this.cdRef.detectChanges(); // Ensure detection cycle has run
