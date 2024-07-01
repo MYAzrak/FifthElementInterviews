@@ -5,7 +5,7 @@ import { StatsComponent } from './stats/stats.component';
 export const routes: Routes = [
   {
     path: '',
-    component: WebcamComponent,
+    component: StatsComponent,
     title: `FaceAPI-Angular`,
   },
   {

@@ -179,8 +179,8 @@ export class WebcamComponent implements OnInit, AfterViewInit {
 
   // Sets a timer which directs to the statistics page after 5 minutes
   startTimer() {
-    const DURATION = 5; // 300s = 5m
-    let timeLeft = DURATION;
+    const DURATION: number = 5; // 300s = 5m
+    let timeLeft: number = DURATION;
     let minutes: number = 0;
     let seconds: number = 0;
 
