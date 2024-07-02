@@ -1,30 +1,13 @@
 .chart-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .chart-selection {
-  padding: 10px;
-  background-color: #f0f0f0;
-  z-index: 10;
-}
-
-.chart-display {
-  flex-grow: 1;
-  position: relative;
+  margin-bottom: 20px;
 }
 
 .chart-display canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100% !important;
-  height: 100% !important;
   display: none;
 }
 

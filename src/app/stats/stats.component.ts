@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, HostListener } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { DataService } from '../services/data.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -39,34 +39,9 @@ export class StatsComponent implements OnInit, AfterViewInit {
     this.faceCoverSecondsCount = this.dataService.faceCoverSecondsCount;
   }
 
-  @HostListener('window:resize', ['$event'])
-  onResize(event: any) {
-    this.resizeChart();
-  }
-
   ngAfterViewInit(): void {
     this.createCharts();
     this.showSelectedChart();
-    this.resizeChart();
-  }
-
-  resizeChart() {
-    if (this.charts[this.selectedChart]) {
-      this.charts[this.selectedChart].resize();
-    }
-  }
-
-  showSelectedChart() {
-    Object.keys(this.charts).forEach((key) => {
-      const chartCanvas = document.getElementById(
-        `${key}Chart`
-      ) as HTMLCanvasElement;
-      if (chartCanvas) {
-        chartCanvas.style.display =
-          key === this.selectedChart ? 'block' : 'none';
-      }
-    });
-    this.resizeChart();
   }
 
   createCharts() {
@@ -77,14 +52,21 @@ export class StatsComponent implements OnInit, AfterViewInit {
     this.charts['faceCover'] = this.createFaceCoverChart();
   }
 
+  showSelectedChart() {
+    Object.keys(this.charts).forEach(key => {
+      const chartCanvas = document.getElementById(`${key}Chart`) as HTMLCanvasElement;
+      if (chartCanvas) {
+        chartCanvas.style.display = key === this.selectedChart ? 'block' : 'none';
+      }
+    });
+  }
+
   onChartSelectionChange() {
     this.showSelectedChart();
   }
 
   createExpressionChart(): Chart {
-    const ctx = document.getElementById(
-      'expressionsChart'
-    ) as HTMLCanvasElement;
+    const ctx = document.getElementById('expressionsChart') as HTMLCanvasElement;
     return new Chart(ctx, {
       type: 'bar' as ChartType,
       data: {
@@ -179,9 +161,7 @@ export class StatsComponent implements OnInit, AfterViewInit {
   }
 
   createFacesDetectedChart(): Chart {
-    const ctx = document.getElementById(
-      'facesDetectedChart'
-    ) as HTMLCanvasElement;
+    const ctx = document.getElementById('facesDetectedChart') as HTMLCanvasElement;
     return new Chart(ctx, {
       type: 'line' as ChartType,
       data: {
