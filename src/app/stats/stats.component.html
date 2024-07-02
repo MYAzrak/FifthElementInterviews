@@ -1,7 +1,18 @@
 <div class="chart-container">
-  <canvas id="expressionChart"></canvas>
-  <canvas id="ageChart"></canvas>
-  <canvas id="genderChart"></canvas>
-  <canvas id="facesDetectedChart"></canvas>
-  <canvas id="faceCoverChart"></canvas>
+  <div class="chart-selection">
+    <label for="chartSelect">Select Chart:</label>
+    <select id="chartSelect" [(ngModel)]="selectedChart" (change)="onChartSelectionChange()">
+      <option *ngFor="let option of chartOptions" [value]="option.value">
+        {{ option.label }}
+      </option>
+    </select>
+  </div>
+
+  <div class="chart-display">
+    <canvas id="expressionsChart"></canvas>
+    <canvas id="ageChart"></canvas>
+    <canvas id="genderChart"></canvas>
+    <canvas id="facesDetectedChart"></canvas>
+    <canvas id="faceCoverChart"></canvas>
+  </div>
 </div>
