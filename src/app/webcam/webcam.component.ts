@@ -68,7 +68,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
       .getUserMedia({ video: {}, audio: false })
       .then((stream) => (this.videoInput.srcObject = stream))
       .catch((error) => console.log(error));
-    this.detect_Faces();
+    this.detectFaces();
     this.startTimer();
   }
 
@@ -118,8 +118,8 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     if (avgExpression) {
       this.avgExpressions.push(avgExpression);
       // console.log(`The average face expression after 3m is "${avgExpression}"`);
+      this.dataService.avgExpressions.push(avgExpression);
     }
-    this.dataService.updateAvgExpressions(this.avgExpressions);
   }
 
   // Interpolates age predictions
@@ -138,7 +138,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     let avgAge = sum / lastTenPredictedAges.length;
     this.avgAges.push(avgAge);
     // console.log(`The average age after 10s is "${avgAge}"`);
-    this.dataService.updateAvgAges(this.avgAges);
+    this.dataService.avgAges.push(avgAge);
   }
 
   // Saves the gender at each detection
@@ -161,7 +161,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     this.predictedGenders = [];
     this.avgGenders.push(avgGender);
     // console.log(`The average gender after 10s is "${avgGender}"`);
-    this.dataService.updateAvgGenders(this.avgGenders);
+    this.dataService.avgGenders.push(avgGender);
   }
 
   // Saves number of faces detected
@@ -178,20 +178,20 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     this.numOfFacesDetected = [];
     this.avgNumOfFacesDetected.push(avgNum);
     // console.log(`The average number of face detected after 5s is "${avgNum}"`);
-    this.dataService.updateAvgNumOfFacesDetected(this.avgNumOfFacesDetected);
+    this.dataService.avgNumOfFacesDetected.push(avgNum);
   }
 
   // Alerts the user if their faces isn't visible + increments faceCoverSecondsCount
   alertUser() {
     this.faceCoverSecondsCount++;
     // alert("No face detected! Please ensure your face is visible to the camera."); // Could be changed afterwards since alert() stops the execution of the program
-    console.log(`The face was covered for ${this.faceCoverSecondsCount}s`);
-    this.dataService.updateFaceCoverSecondsCount(this.faceCoverSecondsCount);
+    // console.log(`The face was covered for ${this.faceCoverSecondsCount}s`);
+    this.dataService.faceCoverSecondsCount++;
   }
 
   // Sets a timer which directs to the statistics page after 5 minutes
   startTimer() {
-    const DURATION: number = 5; // 300s = 5m
+    const DURATION: number = 30; // 300s = 5m
     let timeLeft: number = DURATION;
     let minutes: number = 0;
     let seconds: number = 0;
@@ -219,7 +219,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     }
   }
 
-  async detect_Faces() {
+  async detectFaces() {
     this.elRef.nativeElement
       .querySelector('video')
       .addEventListener('play', async () => {
