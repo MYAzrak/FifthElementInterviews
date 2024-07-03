@@ -133,7 +133,11 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     let lastTenPredictedAges: number[] = this.predictedAges.slice(-10);
     let sum: number = lastTenPredictedAges.reduce((acc, val) => acc + val, 0);
     let avgAge: number = sum / lastTenPredictedAges.length;
-    this.avgAges.push(avgAge);
+    if (avgAge) {
+      this.avgAges.push(avgAge);
+    } else {
+      this.avgAges.push(0);
+    }
     // console.log(`The average age after 10s is "${avgAge}"`);
   }
 
@@ -171,7 +175,11 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     let avgNum = sum / numOfFacesDetectedCopy.length;
 
     this.numOfFacesDetected = [];
-    this.avgNumOfFacesDetected.push(avgNum);
+    if (avgNum) {
+      this.avgNumOfFacesDetected.push(avgNum);
+    } else {
+      this.avgNumOfFacesDetected.push(0);
+    }
     // console.log(`The average number of face detected after 5s is "${avgNum}"`);
   }
 
