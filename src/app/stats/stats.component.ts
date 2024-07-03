@@ -83,7 +83,7 @@ export class StatsComponent implements OnInit, AfterViewInit {
             data: this.avgExpressions.map(
               (exp) => this.avgExpressions.filter((e) => e === exp).length
             ),
-            backgroundColor: 'rgba(255,255,255)',
+            backgroundColor: 'rgba(54, 162, 235, 0.6)',
           },
         ],
       },
