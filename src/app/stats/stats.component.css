@@ -1,17 +1,32 @@
 .chart-container {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 20px;
+  background-color: #f4f4f4;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .chart-selection {
   margin-bottom: 20px;
+  text-align: center;
+}
+
+.chart-display {
+  display: flex;
+  justify-content: center;
 }
 
 .chart-display canvas {
   display: none;
+  width: 1000px;
+  height: 600px;
+  max-width: 100%;
 }
 
 select {
   padding: 5px;
   font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }

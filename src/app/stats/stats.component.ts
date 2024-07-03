@@ -32,9 +32,11 @@ export class StatsComponent implements OnInit, AfterViewInit {
     const data = localStorage.getItem('webcamData');
     if (data) {
       const parsedData = JSON.parse(data);
-      console.log(data);
-      console.log(parsedData);
-      console.log(parsedData.avgAge);
+      this.avgExpressions = parsedData.avgExpressions;
+      this.avgAges = parsedData.avgAges;
+      this.avgGenders = parsedData.avgGenders;
+      this.avgNumOfFacesDetected = parsedData.avgNumOfFacesDetected;
+      this.faceCoverSecondsCount = parsedData.faceCoverSecondsCount;
     }
   }
 
