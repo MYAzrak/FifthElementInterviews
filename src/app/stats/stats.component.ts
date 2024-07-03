@@ -1,5 +1,4 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
-import { DataService } from '../services/data.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, ChartType } from 'chart.js/auto';
@@ -29,21 +28,7 @@ export class StatsComponent implements OnInit, AfterViewInit {
 
   private charts: { [key: string]: Chart } = {};
 
-  constructor(private dataService: DataService) {}
-
   ngOnInit() {
-    // this.avgExpressions = this.dataService.avgExpressions;
-    // this.avgAges = this.dataService.avgAges;
-    // this.avgGenders = this.dataService.avgGenders;
-    // this.avgNumOfFacesDetected = this.dataService.avgNumOfFacesDetected;
-    // this.faceCoverSecondsCount = this.dataService.faceCoverSecondsCount;
-    // console.log(`Expressions`, this.avgExpressions)
-    // console.log(`Age`, this.avgAges)
-    // console.log(`Gender`, this.avgGenders)
-    // console.log(`Num of faces detected`, this.avgNumOfFacesDetected)
-    // console.log(`The face was covered for`, this.faceCoverSecondsCount)
-
-    // from local storage
     const data = localStorage.getItem('webcamData');
     if (data) {
       const parsedData = JSON.parse(data);
@@ -51,12 +36,6 @@ export class StatsComponent implements OnInit, AfterViewInit {
       console.log(parsedData);
       console.log(parsedData.avgAge);
     }
-
-    // console.log(`Expressions`, this.avgExpressions)
-    // console.log(`Age`, this.avgAges)
-    // console.log(`Gender`, this.avgGenders)
-    // console.log(`Num of faces detected`, this.avgNumOfFacesDetected)
-    // console.log(`The face was covered for`, this.faceCoverSecondsCount)
   }
 
   ngAfterViewInit(): void {
