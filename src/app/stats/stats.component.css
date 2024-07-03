@@ -1,11 +1,28 @@
-#text {
+.results-container {
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 20px;
-  font-size: 24px;
-  margin: 20px 0;
-  color: #333;
   background-color: #f4f4f4;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+#text {
+  padding: 20px;
+  font-size: 22px;
+  margin: 20px 0;
+  color: #333;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  width: calc(100% - 40px);
+  max-height: none;
+  overflow-y: visible;
+  line-height: 1.5;
 }
 
 .chart-container {
@@ -25,12 +42,12 @@
 .chart-display {
   display: inline;
   justify-content: center;
+  text-align: center;
 }
 
 .chart-display canvas {
-  display: none;
-  width: 700px;
-  height: 300px;
+  display: flex;
+  justify-content: center;
   max-width: 100%;
 }
 
@@ -43,7 +60,7 @@ select {
 
 .buttons {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   width: 100%;
 }
 
@@ -56,6 +73,7 @@ select {
   font-size: 20px;
   cursor: pointer;
   transition: background-color 0.3s;
+  justify-content: center;
   text-align: center;
 }
 

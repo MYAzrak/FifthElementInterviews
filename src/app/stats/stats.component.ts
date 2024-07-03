@@ -152,7 +152,6 @@ export class StatsComponent implements OnInit, AfterViewInit {
       );
     }
 
-    // Get expression
     summary.push(this.getCandidateExpression());
 
     if (textElement) {
