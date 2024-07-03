@@ -20,7 +20,7 @@ import * as faceapi from 'face-api.js';
 })
 export class WebcamComponent implements OnInit, AfterViewInit {
   showWebcam: boolean = false;
-  highestExpressions: any[] = []; // Saves the highest expression every second for 3m (then resets)
+  highestExpressions: string[] = []; // Saves the highest expression every second for 3m (then resets)
   avgExpressions: string[] = []; // Saves the average expression detected over 3-minute intervals
   predictedAges: number[] = []; // Saves the last 30 predicted ages
   avgAges: number[] = []; // Saves the average age calculated over 10-seconds intervals
@@ -30,6 +30,10 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   avgNumOfFacesDetected: number[] = []; // Save the average # of faces detected over 5-seconds intervals
   faceCoverSecondsCount = 0; // Saves the cumulative time in seconds that the face was covered
 
+  DETECTION_INTERVAL = 1000; // 1 second
+  AVG_EXPRESSION_INTERVAL = 5000; // Make it 1 minute === 60000 milliseconds
+  AVG_AGE_GENDER_INTERVAL = 5000; // Make it 10 seconds === 10000 milliseconds
+  AVG_NUM_OF_FACES_INTERVAL = 5000; // 5 seconds
   WIDTH = 1080;
   HEIGHT = 500;
   @ViewChild('video')
@@ -78,14 +82,10 @@ export class WebcamComponent implements OnInit, AfterViewInit {
       const expressions = detection.expressions;
       const expressionsArray = Object.entries(expressions);
       expressionsArray.sort((a: any, b: any) => b[1] - a[1]);
-      let topExpression = expressionsArray[0];
-      this.highestExpressions.push({
-        time: Date.now(),
-        expression: topExpression,
-        face: detection.detection.box,
-      });
-      // console.log("Top Expression:", topExpression);
-      // console.log("All Highest Expressions:", this.highestExpressions);
+      let topExpression = expressionsArray[0][0];
+      this.highestExpressions.push(topExpression);
+      // console.log('Top Expression:', topExpression);
+      // console.log('All Highest Expressions:', this.highestExpressions);
     });
   }
 
@@ -191,7 +191,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
 
   // Sets a timer which directs to the statistics page after 5 minutes
   startTimer() {
-    const DURATION: number = 30; // 300s = 5m
+    const DURATION: number = 300; // 300s = 5m
     let timeLeft: number = DURATION;
     let minutes: number = 0;
     let seconds: number = 0;
@@ -272,23 +272,29 @@ export class WebcamComponent implements OnInit, AfterViewInit {
           if (this.resizedDetections.length === 0) {
             this.alertUser();
           } else {
-            this.saveTopExpression(this.resizedDetections); // Saves the top face expression each interval
+            this.saveTopExpression(this.resizedDetections);
             this.saveGender(this.resizedDetections);
+            this.saveNumOfFacesDetected(this.resizedDetections);
           }
-          this.saveNumOfFacesDetected(this.resizedDetections);
-        }, 1000); // Maybe make it every 0.5s (500ms)
+        }, this.DETECTION_INTERVAL);
 
-        // Saves the average expression after 3m
-        setInterval(() => this.saveAvgExpression(), 5000); // Make it every 3m (180000ms)
+        // Saves the average expression after 1m
+        setInterval(
+          () => this.saveAvgExpression(),
+          this.AVG_EXPRESSION_INTERVAL
+        );
 
         // Saves the average age and gender every 10s
         setInterval(() => {
           this.saveAvgAge();
           this.saveAvgGender();
-        }, 5000); // Make it every 10s (10000ms)
+        }, this.AVG_AGE_GENDER_INTERVAL);
 
-        // Saves the number of faces detected every 5s
-        setInterval(() => this.saveAvgNumOfFacesDetected(), 5000); // 5 seconds
+        // Saves the average number of faces detected every 5s
+        setInterval(
+          () => this.saveAvgNumOfFacesDetected(),
+          this.AVG_NUM_OF_FACES_INTERVAL
+        );
       });
   }
 

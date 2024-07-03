@@ -37,6 +37,11 @@ export class StatsComponent implements OnInit, AfterViewInit {
     this.avgGenders = this.dataService.avgGenders;
     this.avgNumOfFacesDetected = this.dataService.avgNumOfFacesDetected;
     this.faceCoverSecondsCount = this.dataService.faceCoverSecondsCount;
+    console.log(`Expressions`, this.avgExpressions)
+    console.log(`Age`, this.avgAges)
+    console.log(`Gender`, this.avgGenders)
+    console.log(`Num of faces detected`, this.avgNumOfFacesDetected)
+    console.log(`The face was covered for`, this.faceCoverSecondsCount)
   }
 
   ngAfterViewInit(): void {
@@ -53,10 +58,13 @@ export class StatsComponent implements OnInit, AfterViewInit {
   }
 
   showSelectedChart() {
-    Object.keys(this.charts).forEach(key => {
-      const chartCanvas = document.getElementById(`${key}Chart`) as HTMLCanvasElement;
+    Object.keys(this.charts).forEach((key) => {
+      const chartCanvas = document.getElementById(
+        `${key}Chart`
+      ) as HTMLCanvasElement;
       if (chartCanvas) {
-        chartCanvas.style.display = key === this.selectedChart ? 'block' : 'none';
+        chartCanvas.style.display =
+          key === this.selectedChart ? 'block' : 'none';
       }
     });
   }
@@ -66,7 +74,9 @@ export class StatsComponent implements OnInit, AfterViewInit {
   }
 
   createExpressionChart(): Chart {
-    const ctx = document.getElementById('expressionsChart') as HTMLCanvasElement;
+    const ctx = document.getElementById(
+      'expressionsChart'
+    ) as HTMLCanvasElement;
     return new Chart(ctx, {
       type: 'bar' as ChartType,
       data: {
@@ -161,7 +171,9 @@ export class StatsComponent implements OnInit, AfterViewInit {
   }
 
   createFacesDetectedChart(): Chart {
-    const ctx = document.getElementById('facesDetectedChart') as HTMLCanvasElement;
+    const ctx = document.getElementById(
+      'facesDetectedChart'
+    ) as HTMLCanvasElement;
     return new Chart(ctx, {
       type: 'line' as ChartType,
       data: {
