@@ -85,7 +85,7 @@ export class StatsComponent implements OnInit, AfterViewInit {
     );
     const candidateGender: string =
       Math.floor(sumGenders / this.avgGenders.length) === 0 ? `Male` : `Female`;
-    return `The candidate is ${candidateGender}.`;
+    return `The candidate is a ${candidateGender}.`;
   }
 
   getCandidateAge(): string {
@@ -138,7 +138,7 @@ export class StatsComponent implements OnInit, AfterViewInit {
     if (this.faceCoverSecondsCount > 10) {
       summary.push(
         `The candidate's face was covered for ${this.faceCoverSecondsCount}
-        seconds which indicates a high cheating possiblity.`
+        seconds which indicates a high cheating possibility.`
       );
     }
 
@@ -148,7 +148,7 @@ export class StatsComponent implements OnInit, AfterViewInit {
       summary.push(
         `The number of faces that were detected was ${detectedFaces.toFixed(
           1
-        )} which indicates a cheating possiblity.`
+        )} which indicates a cheating possibility.`
       );
     }
 
