@@ -1,6 +1,6 @@
 #start {
   padding: 10px 20px;
-  background-color: #6a1b9a;
+  background-color:rgb(0, 51, 122);
   color: white;
   border: none;
   border-radius: 10px;
@@ -10,7 +10,7 @@
 }
 
 #start:hover {
-  background-color: #9c27b0;
+  background-color: rgb(51, 153, 255);
 }
 
 .video-container {

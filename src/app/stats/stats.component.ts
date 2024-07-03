@@ -2,6 +2,7 @@ import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, ChartType } from 'chart.js/auto';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-stats',
@@ -27,6 +28,12 @@ export class StatsComponent implements OnInit, AfterViewInit {
   faceCoverSecondsCount: number = 0;
 
   private charts: { [key: string]: Chart } = {};
+
+  restartProcess() {
+    this.router.navigate(['']);
+  }
+
+  constructor(private router: Router) {}
 
   ngOnInit() {
     const data = localStorage.getItem('webcamData');
@@ -74,9 +81,7 @@ export class StatsComponent implements OnInit, AfterViewInit {
       'expressionsChart'
     ) as HTMLCanvasElement;
 
-    const timeIntervals = this.avgExpressions.map(
-      (_, index) => index
-    );
+    const timeIntervals = this.avgExpressions.map((_, index) => index);
     const uniqueExpressions = [...new Set(this.avgExpressions)];
 
     const data = this.avgExpressions
@@ -209,7 +214,7 @@ export class StatsComponent implements OnInit, AfterViewInit {
             beginAtZero: true,
             title: {
               display: true,
-              text: 'Gender',
+              text: 'Gender (0 = Male)',
             },
           },
         },
