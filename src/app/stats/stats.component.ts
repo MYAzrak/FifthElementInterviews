@@ -347,7 +347,7 @@ export class StatsComponent implements OnInit, AfterViewInit {
   createFaceCoverChart(): Chart {
     const ctx = document.getElementById('faceCoverChart') as HTMLCanvasElement;
     return new Chart(ctx, {
-      type: 'doughnut' as ChartType,
+      type: 'bar' as ChartType,
       data: {
         labels: ['Face Covered', 'Face Visible'],
         datasets: [
