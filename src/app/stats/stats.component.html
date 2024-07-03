@@ -1,6 +1,13 @@
 <div class="buttons">
   <button (click)="restartProcess()" id="restart">Restart</button>
-  <button id="results">Results</button>
+  <button (click)="openModal()" id="results">Results</button>
+</div>
+
+<div id="myModal" class="modal">
+  <div class="modal-content">
+    <span class="close" (click)="closeModal()">&times;</span>
+    <p id="text">Your text goes here...</p>
+  </div>
 </div>
 
 <div class="chart-container">

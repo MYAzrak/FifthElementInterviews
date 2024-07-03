@@ -76,6 +76,32 @@ export class StatsComponent implements OnInit, AfterViewInit {
     this.showSelectedChart();
   }
 
+  printResults() {
+    const textElement: HTMLElement | null = document.getElementById(`text`);
+    let text: string[] = [];
+    text.push('hi');
+    text.push('temp');
+    text.push('test');
+    if (textElement) {
+      textElement.textContent = text.join('. ');
+    }
+  }
+
+  openModal() {
+    const modal = document.getElementById('myModal');
+    if (modal) {
+      modal.style.display = 'block';
+    }
+    this.printResults();
+  }
+
+  closeModal() {
+    const modal = document.getElementById('myModal');
+    if (modal) {
+      modal.style.display = 'none';
+    }
+  }
+
   createExpressionChart(): Chart {
     const ctx = document.getElementById(
       'expressionsChart'
