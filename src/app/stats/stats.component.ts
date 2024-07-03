@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, ChartType } from 'chart.js/auto';
 import { Router } from '@angular/router';
+import { math } from '@tensorflow/tfjs-core';
 
 @Component({
   selector: 'app-stats',
@@ -45,6 +46,7 @@ export class StatsComponent implements OnInit, AfterViewInit {
       this.avgNumOfFacesDetected = parsedData.avgNumOfFacesDetected;
       this.faceCoverSecondsCount = parsedData.faceCoverSecondsCount;
     }
+    this.printResults();
   }
 
   ngAfterViewInit(): void {
@@ -76,29 +78,85 @@ export class StatsComponent implements OnInit, AfterViewInit {
     this.showSelectedChart();
   }
 
+  getCandidateGender(): string {
+    if (this.avgGenders.length === 0) return `Gender data not available.`;
+    const sumGenders: number = this.avgGenders.reduce(
+      (acc, curr) => acc + curr
+    );
+    const candidateGender: string =
+      Math.floor(sumGenders / this.avgGenders.length) === 0 ? `Male` : `Female`;
+    return `The candidate is ${candidateGender}.`;
+  }
+
+  getCandidateAge(): string {
+    if (this.avgAges.length === 0) return `Age data not available.`;
+    const sumAges: number = this.avgAges.reduce((acc, curr) => acc + curr);
+    const candidateAge: number = sumAges / this.avgAges.length;
+    return `They are ${candidateAge.toFixed(1)} years old.`;
+  }
+
+  getNumOfFacesDetected(): number {
+    if (this.avgNumOfFacesDetected.length === 0) return 1;
+    const sumFaces: number = this.avgNumOfFacesDetected.reduce(
+      (acc, curr) => acc + curr
+    );
+    return Math.ceil(sumFaces / this.avgNumOfFacesDetected.length);
+  }
+
+  getCandidateExpression(): string {
+    const expressionsCount: { [key: string]: number } = {
+      neutral: 0,
+      happy: 0,
+      sad: 0,
+      angry: 0,
+      fearful: 0,
+      disgusted: 0,
+      surprised: 0,
+    };
+
+    this.avgExpressions.forEach((expr) => {
+      expressionsCount[expr]++;
+    });
+
+    const maxCount = Math.max(...Object.values(expressionsCount));
+    const overallExpression = Object.keys(expressionsCount).find(
+      (expression) => expressionsCount[expression] === maxCount
+    );
+
+    return `Their overall expression during the interview was ${overallExpression}.`;
+  }
+
   printResults() {
     const textElement: HTMLElement | null = document.getElementById(`text`);
-    let text: string[] = [];
-    text.push('hi');
-    text.push('temp');
-    text.push('test');
+    let summary: string[] = [];
+
+    summary.push(this.getCandidateGender());
+
+    summary.push(this.getCandidateAge());
+
+    // If the face was covered for more than 10 seconds
+    if (this.faceCoverSecondsCount > 10) {
+      summary.push(
+        `The candidate's face was covered for ${this.faceCoverSecondsCount}
+        seconds which indicates a high cheating possiblity.`
+      );
+    }
+
+    // Num of faces detected
+    const detectedFaces: number = this.getNumOfFacesDetected();
+    if (detectedFaces !== 1) {
+      summary.push(
+        `The number of faces that were detected was ${detectedFaces.toFixed(
+          1
+        )} which indicates a cheating possiblity.`
+      );
+    }
+
+    // Get expression
+    summary.push(this.getCandidateExpression());
+
     if (textElement) {
-      textElement.textContent = text.join('. ');
-    }
-  }
-
-  openModal() {
-    const modal = document.getElementById('myModal');
-    if (modal) {
-      modal.style.display = 'block';
-    }
-    this.printResults();
-  }
-
-  closeModal() {
-    const modal = document.getElementById('myModal');
-    if (modal) {
-      modal.style.display = 'none';
+      textElement.textContent = summary.join(' ');
     }
   }
 
