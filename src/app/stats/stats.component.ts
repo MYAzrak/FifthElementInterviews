@@ -32,16 +32,31 @@ export class StatsComponent implements OnInit, AfterViewInit {
   constructor(private dataService: DataService) {}
 
   ngOnInit() {
-    this.avgExpressions = this.dataService.avgExpressions;
-    this.avgAges = this.dataService.avgAges;
-    this.avgGenders = this.dataService.avgGenders;
-    this.avgNumOfFacesDetected = this.dataService.avgNumOfFacesDetected;
-    this.faceCoverSecondsCount = this.dataService.faceCoverSecondsCount;
-    console.log(`Expressions`, this.avgExpressions)
-    console.log(`Age`, this.avgAges)
-    console.log(`Gender`, this.avgGenders)
-    console.log(`Num of faces detected`, this.avgNumOfFacesDetected)
-    console.log(`The face was covered for`, this.faceCoverSecondsCount)
+    // this.avgExpressions = this.dataService.avgExpressions;
+    // this.avgAges = this.dataService.avgAges;
+    // this.avgGenders = this.dataService.avgGenders;
+    // this.avgNumOfFacesDetected = this.dataService.avgNumOfFacesDetected;
+    // this.faceCoverSecondsCount = this.dataService.faceCoverSecondsCount;
+    // console.log(`Expressions`, this.avgExpressions)
+    // console.log(`Age`, this.avgAges)
+    // console.log(`Gender`, this.avgGenders)
+    // console.log(`Num of faces detected`, this.avgNumOfFacesDetected)
+    // console.log(`The face was covered for`, this.faceCoverSecondsCount)
+
+    // from local storage
+    const data = localStorage.getItem('webcamData');
+    if (data) {
+      const parsedData = JSON.parse(data);
+      console.log(data);
+      console.log(parsedData);
+      console.log(parsedData.avgAge);
+    }
+
+    // console.log(`Expressions`, this.avgExpressions)
+    // console.log(`Age`, this.avgAges)
+    // console.log(`Gender`, this.avgGenders)
+    // console.log(`Num of faces detected`, this.avgNumOfFacesDetected)
+    // console.log(`The face was covered for`, this.faceCoverSecondsCount)
   }
 
   ngAfterViewInit(): void {

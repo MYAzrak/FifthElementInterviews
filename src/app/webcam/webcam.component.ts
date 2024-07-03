@@ -89,7 +89,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     });
   }
 
-  // Saves the average expression (called every 3 minutes)
+  // Saves the average expression (called every 1 minutes)
   saveAvgExpression() {
     const expressionsCount: { [key: string]: number } = {
       neutral: 0,
@@ -104,7 +104,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     const highestExpressionsCopy = [...this.highestExpressions];
 
     highestExpressionsCopy.forEach((expr) => {
-      expressionsCount[expr.expression[0]]++;
+      expressionsCount[expr]++;
     });
 
     const counts = Object.values(expressionsCount);
@@ -117,7 +117,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     this.highestExpressions = [];
     if (avgExpression) {
       this.avgExpressions.push(avgExpression);
-      // console.log(`The average face expression after 3m is "${avgExpression}"`);
+      // console.log(`The average face expression after 1m is "${avgExpression}"`);
       this.dataService.avgExpressions.push(avgExpression);
     }
   }
@@ -133,9 +133,9 @@ export class WebcamComponent implements OnInit, AfterViewInit {
 
   // Saves the average age (called every 10 seconds)
   saveAvgAge() {
-    let lastTenPredictedAges = this.predictedAges.slice(-10);
-    let sum = lastTenPredictedAges.reduce((acc, val) => acc + val, 0);
-    let avgAge = sum / lastTenPredictedAges.length;
+    let lastTenPredictedAges :number[] = this.predictedAges.slice(-10);
+    let sum : number= lastTenPredictedAges.reduce((acc, val) => acc + val, 0);
+    let avgAge :number = sum / lastTenPredictedAges.length;
     this.avgAges.push(avgAge);
     // console.log(`The average age after 10s is "${avgAge}"`);
     this.dataService.avgAges.push(avgAge);
@@ -191,7 +191,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
 
   // Sets a timer which directs to the statistics page after 5 minutes
   startTimer() {
-    const DURATION: number = 300; // 300s = 5m
+    const DURATION: number = 30; // 300s = 5m
     let timeLeft: number = DURATION;
     let minutes: number = 0;
     let seconds: number = 0;
@@ -199,21 +199,29 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     const timerDisplay = document.getElementById('timer');
     if (timerDisplay) {
       const interval = window.setInterval(() => {
-        let minutes = Math.floor(timeLeft / 60);
-        let seconds = timeLeft % 60;
+        minutes = Math.floor(timeLeft / 60);
+        seconds = timeLeft % 60;
 
         timerDisplay.textContent = `${minutes}:${
           seconds < 10 ? '0' + seconds : seconds
         }`;
 
         if (timeLeft-- < 0) {
+          const data = {
+            avgExpressions: this.avgExpressions,
+            avgAges: this.avgAges,
+            avgGenders: this.avgGenders,
+            avgNumOfFacesDetected: this.avgNumOfFacesDetected,
+            faceCoverSecondsCount: this.faceCoverSecondsCount,
+          };
+          localStorage.setItem('webcamData', JSON.stringify(data));
           clearInterval(interval); // Stop the interval
           timerDisplay.textContent = 'Directing to Statistics';
           setTimeout(() => {
             this.router.navigate(['/stats']); // Navigate to stats component
-          }, 1000); // 1000 milliseconds = 1 second
+          }, 2000); // Wait for 2 seconds then navigate to stats component
         }
-      }, 1000);
+      }, 1000); // Decrement 1 from the timer every second
     } else {
       console.error('Timer display element not found');
     }
