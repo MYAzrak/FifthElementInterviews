@@ -22,7 +22,7 @@ export class StatsComponent implements OnInit, AfterViewInit {
 
   avgExpressions: string[] = [];
   avgAges: number[] = [];
-  avgGenders: string[] = [];
+  avgGenders: number[] = [];
   avgNumOfFacesDetected: number[] = [];
   faceCoverSecondsCount: number = 0;
 
@@ -73,32 +73,75 @@ export class StatsComponent implements OnInit, AfterViewInit {
     const ctx = document.getElementById(
       'expressionsChart'
     ) as HTMLCanvasElement;
+
+    const timeIntervals = this.avgExpressions.map(
+      (_, index) => index
+    );
+    const uniqueExpressions = [...new Set(this.avgExpressions)];
+
+    const data = this.avgExpressions
+      .slice(0)
+      .map((exp) => uniqueExpressions.indexOf(exp));
+
     return new Chart(ctx, {
-      type: 'bar' as ChartType,
+      type: 'line' as ChartType,
       data: {
-        labels: this.avgExpressions,
+        labels: timeIntervals,
         datasets: [
           {
-            label: 'Average Expressions',
-            data: this.avgExpressions.map(
-              (exp) => this.avgExpressions.filter((e) => e === exp).length
-            ),
-            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+            label: 'Expressions',
+            data: data,
+            borderColor: 'black',
+            borderWidth: 2,
+            fill: false,
+            pointRadius: 0,
+            stepped: true,
           },
         ],
       },
       options: {
         responsive: true,
+        plugins: {
+          legend: {
+            display: false,
+          },
+        },
         scales: {
-          y: {
-            beginAtZero: true,
+          x: {
             title: {
               display: true,
-              text: 'Count',
+              text: `Time (minutes)`,
+            },
+            grid: {
+              display: false,
             },
           },
         },
+        layout: {
+          padding: {
+            top: 30,
+          },
+        },
       },
+      plugins: [
+        {
+          id: 'expressionLabels',
+          afterDraw: (chart) => {
+            const ctx = chart.ctx;
+            chart.data.datasets[0].data.forEach((_, index) => {
+              const meta = chart.getDatasetMeta(0);
+              const x = meta.data[index].x;
+              const y = meta.data[index].y;
+              ctx.save();
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'bottom';
+              ctx.fillStyle = 'black';
+              ctx.fillText(this.avgExpressions[index], x, y - 10);
+              ctx.restore();
+            });
+          },
+        },
+      ],
     });
   }
 
@@ -140,28 +183,36 @@ export class StatsComponent implements OnInit, AfterViewInit {
 
   createGenderChart(): Chart {
     const ctx = document.getElementById('genderChart') as HTMLCanvasElement;
-    const genderCounts = this.avgGenders.reduce((acc, gender) => {
-      acc[gender] = (acc[gender] || 0) + 1;
-      return acc;
-    }, {} as { [key: string]: number });
-
     return new Chart(ctx, {
-      type: 'pie' as ChartType,
+      type: 'line' as ChartType,
       data: {
-        labels: Object.keys(genderCounts),
+        labels: this.avgGenders.map((_, index) => index * 10),
         datasets: [
           {
-            label: 'Gender Distribution',
-            data: Object.values(genderCounts),
-            backgroundColor: [
-              'rgba(255, 99, 132, 0.6)',
-              'rgba(54, 162, 235, 0.6)',
-            ],
+            label: 'Average Gender',
+            data: this.avgGenders,
+            borderColor: 'rgb(255, 99, 132)',
+            tension: 0.1,
           },
         ],
       },
       options: {
         responsive: true,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Time (seconds)',
+            },
+          },
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Gender',
+            },
+          },
+        },
       },
     });
   }

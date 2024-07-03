@@ -24,7 +24,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   predictedAges: number[] = []; // Saves the last 30 predicted ages
   avgAges: number[] = []; // Saves the average age calculated over 10-seconds intervals
   predictedGenders: string[] = []; // Saves the predicted genders every second for 10s (then resets)
-  avgGenders: string[] = []; // Saves the average gender calculated over 10-seconds intervals
+  avgGenders: number[] = []; // Saves the average gender calculated over 10-seconds intervals
   numOfFacesDetected: number[] = []; // Saves the # of faces detected every second for 5s (then resets)
   avgNumOfFacesDetected: number[] = []; // Save the average # of faces detected over 5-seconds intervals
   faceCoverSecondsCount = 0; // Saves the cumulative time in seconds that the face was covered
@@ -156,7 +156,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
       else femaleCount++;
     }
 
-    let avgGender = maleCount >= femaleCount ? 'male' : 'female';
+    let avgGender = maleCount >= femaleCount ? 0 : 1;
 
     this.predictedGenders = [];
     this.avgGenders.push(avgGender);
