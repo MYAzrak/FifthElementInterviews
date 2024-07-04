@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import * as faceapi from 'face-api.js';
+import * as math from 'mathjs';
 
 @Component({
   selector: 'app-webcam',
@@ -30,7 +31,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   faceCoverSecondsCount = 0; // Saves the cumulative time in seconds that the face was covered
 
   DETECTION_INTERVAL = 1000; // 1 second
-  AVG_EXPRESSION_INTERVAL = 5000; // Make it 1 minute === 60000 milliseconds
+  AVG_EXPRESSION_INTERVAL = 60000; // Make it 1 minute === 60000 milliseconds
   AVG_AGE_GENDER_INTERVAL = 5000; // Make it 10 seconds === 10000 milliseconds
   AVG_NUM_OF_FACES_INTERVAL = 5000; // 5 seconds
   WIDTH = 1280; // As .video-container video
@@ -90,35 +91,91 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   }
 
   // Saves the average expression (called every 1 minutes)
-  saveAvgExpression() {
-    const expressionsCount: { [key: string]: number } = {
-      neutral: 0,
-      happy: 0,
-      sad: 0,
-      angry: 0,
-      fearful: 0,
-      disgusted: 0,
-      surprised: 0,
-    };
+  // saveAvgExpression() {
+  //   const expressionsCount: { [key: string]: number } = {
+  //     neutral: 0,
+  //     happy: 0,
+  //     sad: 0,
+  //     angry: 0,
+  //     fearful: 0,
+  //     disgusted: 0,
+  //     surprised: 0,
+  //   };
 
+  //   const highestExpressionsCopy = [...this.highestExpressions];
+
+  //   highestExpressionsCopy.forEach((expr) => {
+  //     expressionsCount[expr]++;
+  //   });
+
+  //   const counts = Object.values(expressionsCount);
+  //   const maxCount = Math.max(...counts);
+
+  //   const avgExpression = Object.keys(expressionsCount).find(
+  //     (expression) => expressionsCount[expression] === maxCount
+  //   );
+
+  //   this.highestExpressions = [];
+  //   if (avgExpression) {
+  //     this.avgExpressions.push(avgExpression);
+  //     // console.log(`The average face expression after 1m is "${avgExpression}"`);
+  //   }
+  // }
+
+  applyBellCurve() {
     const highestExpressionsCopy = [...this.highestExpressions];
 
-    highestExpressionsCopy.forEach((expr) => {
-      expressionsCount[expr]++;
-    });
+    // Count the frequency of each expression
+    const frequencyMap = highestExpressionsCopy.reduce((acc, expr) => {
+      acc[expr] = (acc[expr] || 0) + 1;
+      return acc;
+    }, {} as { [key: string]: number });
+    console.log(`frequencyMap:`, frequencyMap);
 
-    const counts = Object.values(expressionsCount);
-    const maxCount = Math.max(...counts);
+    const uniqueExpressions = Object.keys(frequencyMap);
+    const frequencies = uniqueExpressions.map((expr) => frequencyMap[expr]);
+    console.log(`uniqueExpressions:`, uniqueExpressions);
+    console.log(`frequencies:`, frequencies);
 
-    const avgExpression = Object.keys(expressionsCount).find(
-      (expression) => expressionsCount[expression] === maxCount
-    );
-
-    this.highestExpressions = [];
-    if (avgExpression) {
-      this.avgExpressions.push(avgExpression);
-      // console.log(`The average face expression after 1m is "${avgExpression}"`);
+    if (frequencies.length === 0) {
+      this.avgExpressions.push(`neutral`);
+      return;
     }
+    const mean: number = math.mean(frequencies);
+    const stdDev: number = Number(math.std(frequencies));
+
+    // Apply Gaussian (normal) distribution to frequencies
+    const weights = frequencies.map(
+      (freq) =>
+        Math.exp(-0.5 * Math.pow((freq - mean) / stdDev, 2)) /
+        (stdDev * Math.sqrt(2 * Math.PI))
+    );
+    console.log(`weights:`, weights);
+
+    // Calculate weighted sum
+    const weightedSum = uniqueExpressions.reduce(
+      (sum, expr, index) => sum + frequencyMap[expr] * weights[index],
+      0
+    );
+    console.log(`weightedSum:`, weightedSum);
+    const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+    console.log(`totalWeight:`, totalWeight);
+    const weightedMean = weightedSum / totalWeight;
+    console.log(`weightedMean:`, weightedMean);
+    // Find the expression with frequency closest to the weighted mean
+    const closestExpression = uniqueExpressions.reduce(
+      (closest, expr) => {
+        const diff = Math.abs(frequencyMap[expr] - weightedMean);
+        return diff < closest.diff ? { expression: expr, diff: diff } : closest;
+      },
+      { expression: '', diff: Infinity }
+    );
+    this.highestExpressions = [];
+    this.avgExpressions.push(closestExpression.expression);
+    console.log(`closestExpress`, closestExpression);
+    console.log(
+      `The average face expression after 1m is "${closestExpression.expression}"`
+    );
   }
 
   // Interpolates age predictions
@@ -194,7 +251,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
 
   // Sets a timer which directs to the statistics page after 5 minutes
   startTimer() {
-    const DURATION: number = 30; // 300s = 5m
+    const DURATION: number = 65; // 300s = 5m
     let timeLeft: number = DURATION;
     let minutes: number = 0;
     let seconds: number = 0;
@@ -239,7 +296,10 @@ export class WebcamComponent implements OnInit, AfterViewInit {
         this.canvasEl.appendChild(this.canvas);
 
         this.canvas.setAttribute('id', 'canvass');
-        this.canvas.setAttribute('style', `position: absolute; top: 0; left: 0;`);
+        this.canvas.setAttribute(
+          'style',
+          `position: absolute; top: 0; left: 0;`
+        );
 
         this.displaySize = {
           width: this.videoInput.width,
@@ -291,10 +351,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
         }, this.DETECTION_INTERVAL);
 
         // Saves the average expression after 1m
-        setInterval(
-          () => this.saveAvgExpression(),
-          this.AVG_EXPRESSION_INTERVAL
-        );
+        setInterval(() => this.applyBellCurve(), this.AVG_EXPRESSION_INTERVAL);
 
         // Saves the average age and gender every 10s
         setInterval(() => {
