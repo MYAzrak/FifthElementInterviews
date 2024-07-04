@@ -239,7 +239,8 @@ export class WebcamComponent implements OnInit, AfterViewInit {
         this.canvasEl.appendChild(this.canvas);
 
         this.canvas.setAttribute('id', 'canvass');
-        this.canvas.setAttribute('style', `position: absolute;`);
+        this.canvas.setAttribute('style', `position: absolute; top: 0; left: 0;`);
+
         this.displaySize = {
           width: this.videoInput.width,
           height: this.videoInput.height,

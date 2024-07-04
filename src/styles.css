@@ -14,5 +14,6 @@ app-root {
   align-items: center;
   height: 100vh;
   width: 100vw;
-  background-color: #DCDCDC;
+  background: linear-gradient(120deg, #66A3E0, #99CCFF, #CCE6FF);
+  font-family: Arial, sans-serif;
 }

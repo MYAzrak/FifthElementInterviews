@@ -1,7 +1,10 @@
-<button *ngIf="!showWebcam" (click)="onClickSwitchWebcam()" id="start">Start!</button>
+<div class="welcome-container" *ngIf="!showWebcam">
+  <h1>Welcome to the Fifth Element's Interviews!</h1>
+  <button *ngIf="!showWebcam" (click)="onClickSwitchWebcam()" id="start">Start!</button>
+</div>
 
 <div class="video-container" *ngIf="showWebcam">
   <video #video [width]="WIDTH" [height]="HEIGHT" autoplay muted></video>
-  <canvas #canvas [width]="WIDTH" [height]="HEIGHT"></canvas>
+  <div #canvas ></div>
 </div>
 <div id="timer" *ngIf="showWebcam">5:00</div>
