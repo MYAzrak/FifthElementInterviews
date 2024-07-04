@@ -72,7 +72,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
       .catch((error) => console.log(error));
     this.detectFaces();
     setTimeout(() => {
-      // this.startTimer();
+      this.startTimer();
     }, 3000); // Waits for 3s for the video to load
   }
 
