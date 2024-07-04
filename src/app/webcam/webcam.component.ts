@@ -19,8 +19,8 @@ import * as faceapi from 'face-api.js';
 })
 export class WebcamComponent implements OnInit, AfterViewInit {
   showWebcam: boolean = false;
-  highestExpressions: string[] = []; // Saves the highest expression every second for 3m (then resets)
-  avgExpressions: string[] = []; // Saves the average expression detected over 3-minute intervals
+  highestExpressions: string[] = []; // Saves the highest expression every second for 1m (then resets)
+  avgExpressions: string[] = []; // Saves the average expression detected over 1-minute intervals
   predictedAges: number[] = []; // Saves the last 30 predicted ages
   avgAges: number[] = []; // Saves the average age calculated over 10-seconds intervals
   predictedGenders: string[] = []; // Saves the predicted genders every second for 10s (then resets)
@@ -33,8 +33,8 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   AVG_EXPRESSION_INTERVAL = 5000; // Make it 1 minute === 60000 milliseconds
   AVG_AGE_GENDER_INTERVAL = 5000; // Make it 10 seconds === 10000 milliseconds
   AVG_NUM_OF_FACES_INTERVAL = 5000; // 5 seconds
-  WIDTH = 1080;
-  HEIGHT = 500;
+  WIDTH = 1280; // As .video-container video
+  HEIGHT = 720; // As .video-container video
   @ViewChild('video')
   public video!: ElementRef;
   @ViewChild('canvas')
@@ -72,7 +72,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
       .catch((error) => console.log(error));
     this.detectFaces();
     setTimeout(() => {
-      this.startTimer();
+      // this.startTimer();
     }, 3000); // Waits for 3s for the video to load
   }
 
