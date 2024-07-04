@@ -71,7 +71,9 @@ export class WebcamComponent implements OnInit, AfterViewInit {
       .then((stream) => (this.videoInput.srcObject = stream))
       .catch((error) => console.log(error));
     this.detectFaces();
-    this.startTimer();
+    setTimeout(() => {
+      this.startTimer();
+    }, 3000); // Waits for 3s for the video to load
   }
 
   // Saves the top expression at each detection
