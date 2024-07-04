@@ -89,18 +89,20 @@ export class StatsComponent implements OnInit, AfterViewInit {
   }
 
   getCandidateAge(): string {
-    if (this.avgAges.length === 0) return `Age data not available.`;
-    const sumAges: number = this.avgAges.reduce((acc, curr) => acc + curr);
-    const candidateAge: number = sumAges / this.avgAges.length;
+    const filteredAges: number[] = this.avgAges.filter((age) => age !== 0);
+    if (filteredAges.length === 0) return `Age data not available.`;
+    const sumAges: number = filteredAges.reduce((acc, curr) => acc + curr);
+    const candidateAge: number = sumAges / filteredAges.length;
     return `They are ${candidateAge.toFixed(1)} years old.`;
   }
 
   getNumOfFacesDetected(): number {
-    if (this.avgNumOfFacesDetected.length === 0) return 1;
-    const sumFaces: number = this.avgNumOfFacesDetected.reduce(
-      (acc, curr) => acc + curr
+    const filteredFaces: number[] = this.avgNumOfFacesDetected.filter(
+      (age) => age !== 0
     );
-    return Math.ceil(sumFaces / this.avgNumOfFacesDetected.length);
+    if (filteredFaces.length === 0) return 1;
+    const sumFaces: number = filteredFaces.reduce((acc, curr) => acc + curr);
+    return Math.ceil(sumFaces / filteredFaces.length);
   }
 
   getCandidateExpression(): string {
