@@ -5,6 +5,6 @@
 
 <div class="video-container" *ngIf="showWebcam">
   <video #video [width]="WIDTH" [height]="HEIGHT" autoplay muted></video>
-  <div #canvas ></div>
+  <div #canvas id="canvas"></div>
 </div>
 <div id="timer" *ngIf="showWebcam">5:00</div>

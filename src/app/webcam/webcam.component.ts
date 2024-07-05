@@ -158,7 +158,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
         Math.exp(-0.5 * Math.pow((freq - mean) / stdDev, 2)) /
         (stdDev * Math.sqrt(2 * Math.PI))
     );
-    console.log(`weights:`, weights);
+    // console.log(`weights:`, weights);
 
     // Calculate weighted sum
     const weightedSum = uniqueExpressions.reduce(
