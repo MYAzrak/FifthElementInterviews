@@ -31,7 +31,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   faceCoverSecondsCount = 0; // Saves the cumulative time in seconds that the face was covered
 
   DETECTION_INTERVAL = 1000; // 1 second
-  AVG_EXPRESSION_INTERVAL = 60000; // Make it 1 minute === 60000 milliseconds
+  AVG_EXPRESSION_INTERVAL = 5000; // Make it 1 minute === 60000 milliseconds
   AVG_AGE_GENDER_INTERVAL = 5000; // Make it 10 seconds === 10000 milliseconds
   AVG_NUM_OF_FACES_INTERVAL = 5000; // 5 seconds
   WIDTH = 1280; // As .video-container video
@@ -130,17 +130,25 @@ export class WebcamComponent implements OnInit, AfterViewInit {
       acc[expr] = (acc[expr] || 0) + 1;
       return acc;
     }, {} as { [key: string]: number });
-    console.log(`frequencyMap:`, frequencyMap);
+    // console.log(`frequencyMap:`, frequencyMap);
 
     const uniqueExpressions = Object.keys(frequencyMap);
     const frequencies = uniqueExpressions.map((expr) => frequencyMap[expr]);
-    console.log(`uniqueExpressions:`, uniqueExpressions);
-    console.log(`frequencies:`, frequencies);
+    // console.log(`uniqueExpressions:`, uniqueExpressions);
+    // console.log(`frequencies:`, frequencies);
 
-    if (frequencies.length === 0) {
+    // No faces detected
+    if (uniqueExpressions.length === 0) {
       this.avgExpressions.push(`neutral`);
       return;
     }
+
+    // The expression during the interval did not change
+    if (uniqueExpressions.length === 1) {
+      this.avgExpressions.push(uniqueExpressions[0]);
+      return;
+    }
+
     const mean: number = math.mean(frequencies);
     const stdDev: number = Number(math.std(frequencies));
 
@@ -157,11 +165,12 @@ export class WebcamComponent implements OnInit, AfterViewInit {
       (sum, expr, index) => sum + frequencyMap[expr] * weights[index],
       0
     );
-    console.log(`weightedSum:`, weightedSum);
+    // console.log(`weightedSum:`, weightedSum);
     const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
-    console.log(`totalWeight:`, totalWeight);
+    // console.log(`totalWeight:`, totalWeight);
     const weightedMean = weightedSum / totalWeight;
-    console.log(`weightedMean:`, weightedMean);
+    // console.log(`weightedMean:`, weightedMean);
+
     // Find the expression with frequency closest to the weighted mean
     const closestExpression = uniqueExpressions.reduce(
       (closest, expr) => {
@@ -172,10 +181,10 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     );
     this.highestExpressions = [];
     this.avgExpressions.push(closestExpression.expression);
-    console.log(`closestExpress`, closestExpression);
-    console.log(
-      `The average face expression after 1m is "${closestExpression.expression}"`
-    );
+    // console.log(`closestExpress`, closestExpression);
+    // console.log(
+    //   `The average face expression after 1m is "${closestExpression.expression}"`
+    // );
   }
 
   // Interpolates age predictions
@@ -251,7 +260,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
 
   // Sets a timer which directs to the statistics page after 5 minutes
   startTimer() {
-    const DURATION: number = 65; // 300s = 5m
+    const DURATION: number = 15; // 300s = 5m
     let timeLeft: number = DURATION;
     let minutes: number = 0;
     let seconds: number = 0;
@@ -267,6 +276,9 @@ export class WebcamComponent implements OnInit, AfterViewInit {
         }`;
 
         if (timeLeft-- < 0) {
+          clearInterval(interval); // Stop the interval
+          timerDisplay.textContent = 'Directing to Statistics';
+
           const data = {
             avgExpressions: this.avgExpressions,
             avgAges: this.avgAges,
@@ -275,8 +287,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
             faceCoverSecondsCount: this.faceCoverSecondsCount,
           };
           localStorage.setItem('webcamData', JSON.stringify(data));
-          clearInterval(interval); // Stop the interval
-          timerDisplay.textContent = 'Directing to Statistics';
+
           setTimeout(() => {
             this.router.navigate(['/stats']); // Navigate to stats component
           }, 2000); // Wait for 2 seconds then navigate to stats component
