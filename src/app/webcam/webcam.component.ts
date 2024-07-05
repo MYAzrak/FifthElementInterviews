@@ -279,6 +279,12 @@ export class WebcamComponent implements OnInit, AfterViewInit {
           clearInterval(interval); // Stop the interval
           timerDisplay.textContent = 'Directing to Statistics';
 
+          // Remove the first element of each array since these were saved at second = 0
+          // where the no expressions/age/gender/faces were detected yet
+          this.avgExpressions.shift();
+          this.avgAges.shift();
+          this.avgGenders.shift();
+          this.avgNumOfFacesDetected.shift();
           const data = {
             avgExpressions: this.avgExpressions,
             avgAges: this.avgAges,
