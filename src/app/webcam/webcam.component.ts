@@ -292,7 +292,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
 
   // Checks if the user exits the fullscreen
   checkFullScreen() {
-    const DURATION = 30; // <10 seconds outside full screen is fine
+    const DURATION = 100; // Make it 10s. <10 seconds outside full screen is fine
     let timeAllowedOutsideFullScreen: number = DURATION;
     let checkInterval: any;
 
@@ -342,7 +342,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
 
   // Sets a timer which directs to the statistics page after 5 minutes
   startTimer() {
-    const DURATION: number = 30; // 300s = 5m
+    const DURATION: number = 100; // 300s = 5m
     let timeLeft: number = DURATION;
     let minutes: number = 0;
     let seconds: number = 0;
