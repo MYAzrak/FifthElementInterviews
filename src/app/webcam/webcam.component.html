@@ -1,6 +1,18 @@
 <div class="welcome-container" *ngIf="!showWebcam">
   <h1>Welcome to the Fifth Element's Interviews!</h1>
-  <button *ngIf="!showWebcam" (click)="onClickSwitchWebcam()" id="start">Start!</button>
+  <!-- <button *ngIf="!showWebcam" (click)="onClickSwitchWebcam()" id="start">Start!</button> -->
+  <button *ngIf="!showWebcam" (click)="openModal()" id="start">Start!</button>
+</div>
+
+<div *ngIf="!showWebcam" id="myModal" class="modal">
+  <div class="modal-content">
+    <p><b>Please be informed that:</b></p>
+    <p>1- Your interview will be recorded and saved for 3 months.</p>
+    <p>2- Your screen will also be recorded during the interview.</p>
+    <p>3- You will be in full-screen mode throughout the interview.</p>
+    <p>4- If you exit full-screen mode for more than 10 seconds, you will be <b>disqualified</b>.</p>
+    <button (click)="onClickSwitchWebcam()" id="begin">Understood. Let's Begin!</button>
+  </div>
 </div>
 
 <div class="video-container" *ngIf="showWebcam">

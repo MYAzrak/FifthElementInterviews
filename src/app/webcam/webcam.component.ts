@@ -20,6 +20,7 @@ import * as math from 'mathjs';
 })
 export class WebcamComponent implements OnInit, AfterViewInit {
   showWebcam: boolean = false;
+
   highestExpressions: string[] = []; // Saves the highest expression every second for 1m (then resets)
   avgExpressions: string[] = []; // Saves the average expression detected over 1-minute intervals
   predictedAges: number[] = []; // Saves the last 30 predicted ages
@@ -260,7 +261,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
 
   // Sets a timer which directs to the statistics page after 5 minutes
   startTimer() {
-    const DURATION: number = 15; // 300s = 5m
+    const DURATION: number = 30; // 300s = 5m
     let timeLeft: number = DURATION;
     let minutes: number = 0;
     let seconds: number = 0;
@@ -397,6 +398,13 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     this.cdRef.detectChanges(); // Force change detection
     if (this.showWebcam) {
       this.startVideo();
+    }
+  }
+
+  openModal() {
+    const modal = document.getElementById('myModal');
+    if (modal) {
+      modal.style.display = 'block';
     }
   }
 }
