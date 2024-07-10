@@ -31,6 +31,7 @@ export class StatsComponent implements OnInit, AfterViewInit {
   private charts: { [key: string]: Chart } = {};
 
   restartProcess() {
+    localStorage.clear();
     this.router.navigate(['']);
   }
 

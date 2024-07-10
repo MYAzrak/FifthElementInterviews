@@ -4,6 +4,7 @@ import {
   ChangeDetectorRef,
   Component,
   ElementRef,
+  model,
   OnInit,
   ViewChild,
 } from '@angular/core';
@@ -19,8 +20,14 @@ import * as math from 'mathjs';
   styleUrl: './webcam.component.css',
 })
 export class WebcamComponent implements OnInit, AfterViewInit {
+  detectionInterval: NodeJS.Timeout | undefined;
+  avgNumOfFacesInterval: NodeJS.Timeout | undefined;
+  avgAgeGenderInterval: NodeJS.Timeout | undefined;
+  avgExpressionInterval: NodeJS.Timeout | undefined;
+
   showWebcam: boolean = false;
   isDisqualified: boolean = false;
+  isOutsideFullScreen: boolean = false;
 
   highestExpressions: string[] = []; // Saves the highest expression every second for 1m (then resets)
   avgExpressions: string[] = []; // Saves the average expression detected over 1-minute intervals
@@ -262,7 +269,8 @@ export class WebcamComponent implements OnInit, AfterViewInit {
 
   // Saves the data in local storage to be retrieved in the stats page
   saveData() {
-    // NOTE: WHEN THE USER `RESTART` THE PROCESS, THIS ISSUE DOES NOT OCCUR => REMOVING THE FIRST ELEMENT REMOVES A CRUCIAL VALUE FROM EACH ARRAY
+    // NOTE: WHEN THE USER `RESTART` THE PROCESS, THIS ISSUE DOES NOT OCCUR =>
+    // REMOVING THE FIRST ELEMENT REMOVES A CRUCIAL VALUE FROM EACH ARRAY
     if (this.avgAges[0] === 0) {
       // Remove the first element of each array since these were saved at second = 0
       // where the no expressions/age/gender/faces were detected yet
@@ -284,29 +292,52 @@ export class WebcamComponent implements OnInit, AfterViewInit {
 
   // Checks if the user exits the fullscreen
   checkFullScreen() {
-    let secondsOutsideFullScreen: number = 0;
-    if (!document.fullscreenElement) {
-      setInterval(() => {
-        if (++secondsOutsideFullScreen > 10) {
-          console.log(`You've been disqualified for cheating.`);
-          this.isDisqualified = true;
-          const failData = {
-            isDisqualified: this.isDisqualified,
-          };
-          localStorage.setItem('failData', JSON.stringify(failData));
-          this.router.navigate(['/stats']);
+    const DURATION = 30; // <10 seconds outside full screen is fine
+    let timeAllowedOutsideFullScreen: number = DURATION;
+    let checkInterval: any;
+
+    const startCheckInterval = () => {
+      if (!checkInterval) {
+        checkInterval = setInterval(() => {
+          if (!document.fullscreenElement) {
+            timeAllowedOutsideFullScreen--;
+            console.log(
+              `Please, go back to full-screen. ${timeAllowedOutsideFullScreen}s left`
+            );
+            this.isOutsideFullScreen = true;
+            this.openModal('warning');
+
+            if (timeAllowedOutsideFullScreen === 0) {
+              clearInterval(checkInterval);
+              console.log("You've been disqualified for cheating.");
+              this.isDisqualified = true;
+              const failData = {
+                isDisqualified: this.isDisqualified,
+              };
+              localStorage.setItem('failData', JSON.stringify(failData));
+              this.router.navigate(['/stats']);
+            }
+          } else {
+            console.log('All good now.. returning');
+            timeAllowedOutsideFullScreen = DURATION; // Reset the counter
+            clearInterval(checkInterval);
+            checkInterval = null; // Clear the interval
+          }
+        }, 1000);
+      }
+    };
+
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement) {
+        startCheckInterval();
+      } else {
+        timeAllowedOutsideFullScreen = 0; // Reset the counter if the user returns to full screen
+        if (checkInterval) {
+          clearInterval(checkInterval);
+          checkInterval = null;
         }
-        console.log(
-          `Please, go back to full-screen. ${
-            10 - secondsOutsideFullScreen
-          }s left`
-        );
-        if (document.fullscreenElement) {
-          console.log(`All good now.. returning`);
-          return;
-        }
-      }, 1000);
-    }
+      }
+    });
   }
 
   // Sets a timer which directs to the statistics page after 5 minutes
@@ -318,7 +349,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
 
     const timerDisplay = document.getElementById('timer');
     if (timerDisplay) {
-      const interval = window.setInterval(() => {
+      const timerInterval = window.setInterval(() => {
         minutes = Math.floor(timeLeft / 60);
         seconds = timeLeft % 60;
 
@@ -329,7 +360,11 @@ export class WebcamComponent implements OnInit, AfterViewInit {
         this.checkFullScreen();
 
         if (timeLeft-- < 0) {
-          clearInterval(interval); // Stop the interval
+          clearInterval(timerInterval);
+          clearInterval(this.detectionInterval);
+          clearInterval(this.avgNumOfFacesInterval);
+          clearInterval(this.avgAgeGenderInterval);
+          clearInterval(this.avgExpressionInterval);
           timerDisplay.textContent = 'Directing to Statistics';
           this.saveData();
           setTimeout(() => {
@@ -362,7 +397,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
         };
         faceapi.matchDimensions(this.canvas, this.displaySize);
 
-        setInterval(async () => {
+        this.detectionInterval = setInterval(async () => {
           this.detection = await faceapi
             .detectAllFaces(
               this.videoInput,
@@ -406,16 +441,19 @@ export class WebcamComponent implements OnInit, AfterViewInit {
         }, this.DETECTION_INTERVAL);
 
         // Saves the average expression after 1m
-        setInterval(() => this.applyBellCurve(), this.AVG_EXPRESSION_INTERVAL);
+        this.avgExpressionInterval = setInterval(
+          () => this.applyBellCurve(),
+          this.AVG_EXPRESSION_INTERVAL
+        );
 
         // Saves the average age and gender every 10s
-        setInterval(() => {
+        this.avgAgeGenderInterval = setInterval(() => {
           this.saveAvgAge();
           this.saveAvgGender();
         }, this.AVG_AGE_GENDER_INTERVAL);
 
         // Saves the average number of faces detected every 5s
-        setInterval(
+        this.avgNumOfFacesInterval = setInterval(
           () => this.saveAvgNumOfFacesDetected(),
           this.AVG_NUM_OF_FACES_INTERVAL
         );
@@ -435,10 +473,23 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     }
   }
 
-  openModal() {
-    const modal = document.getElementById('myModal');
+  openModal(modalName: string) {
+    let modal: HTMLElement | null;
+    if (modalName === 'begin') {
+      modal = document.getElementById('beginModal');
+    } else if (modalName === 'warning') {
+      modal = document.getElementById('warningModal');
+    } else {
+      console.error('Modal element not found');
+      return;
+    }
     if (modal) {
       modal.style.display = 'block';
     }
+  }
+
+  fullScreen(){
+    document.documentElement.requestFullscreen();
+    this.isOutsideFullScreen = false;
   }
 }
