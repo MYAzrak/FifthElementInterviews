@@ -20,6 +20,7 @@ import * as math from 'mathjs';
 })
 export class WebcamComponent implements OnInit, AfterViewInit {
   showWebcam: boolean = false;
+  isDisqualified: boolean = false;
 
   highestExpressions: string[] = []; // Saves the highest expression every second for 1m (then resets)
   avgExpressions: string[] = []; // Saves the average expression detected over 1-minute intervals
@@ -259,6 +260,55 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     // console.log(`The face was covered for ${this.faceCoverSecondsCount}s`);
   }
 
+  // Saves the data in local storage to be retrieved in the stats page
+  saveData() {
+    // NOTE: WHEN THE USER `RESTART` THE PROCESS, THIS ISSUE DOES NOT OCCUR => REMOVING THE FIRST ELEMENT REMOVES A CRUCIAL VALUE FROM EACH ARRAY
+    if (this.avgAges[0] === 0) {
+      // Remove the first element of each array since these were saved at second = 0
+      // where the no expressions/age/gender/faces were detected yet
+      this.avgExpressions.shift();
+      this.avgAges.shift();
+      this.avgGenders.shift();
+      this.avgNumOfFacesDetected.shift();
+    }
+
+    const data = {
+      avgExpressions: this.avgExpressions,
+      avgAges: this.avgAges,
+      avgGenders: this.avgGenders,
+      avgNumOfFacesDetected: this.avgNumOfFacesDetected,
+      faceCoverSecondsCount: this.faceCoverSecondsCount,
+    };
+    localStorage.setItem('webcamData', JSON.stringify(data));
+  }
+
+  // Checks if the user exits the fullscreen
+  checkFullScreen() {
+    let secondsOutsideFullScreen: number = 0;
+    if (!document.fullscreenElement) {
+      setInterval(() => {
+        if (++secondsOutsideFullScreen > 10) {
+          console.log(`You've been disqualified for cheating.`);
+          this.isDisqualified = true;
+          const failData = {
+            isDisqualified: this.isDisqualified,
+          };
+          localStorage.setItem('failData', JSON.stringify(failData));
+          this.router.navigate(['/stats']);
+        }
+        console.log(
+          `Please, go back to full-screen. ${
+            10 - secondsOutsideFullScreen
+          }s left`
+        );
+        if (document.fullscreenElement) {
+          console.log(`All good now.. returning`);
+          return;
+        }
+      }, 1000);
+    }
+  }
+
   // Sets a timer which directs to the statistics page after 5 minutes
   startTimer() {
     const DURATION: number = 30; // 300s = 5m
@@ -276,29 +326,12 @@ export class WebcamComponent implements OnInit, AfterViewInit {
           seconds < 10 ? '0' + seconds : seconds
         }`;
 
+        this.checkFullScreen();
+
         if (timeLeft-- < 0) {
           clearInterval(interval); // Stop the interval
           timerDisplay.textContent = 'Directing to Statistics';
-
-          // NOTE: WHEN THE USER `RESTART` THE PROCESS, THIS ISSUE DOES NOT OCCUR => REMOVING THE FIRST ELEMENT REMOVES A CRUCIAL VALUE FROM EACH ARRAY
-          if (this.avgAges[0] === 0) {
-            // Remove the first element of each array since these were saved at second = 0
-            // where the no expressions/age/gender/faces were detected yet
-            this.avgExpressions.shift();
-            this.avgAges.shift();
-            this.avgGenders.shift();
-            this.avgNumOfFacesDetected.shift();
-          }
-
-          const data = {
-            avgExpressions: this.avgExpressions,
-            avgAges: this.avgAges,
-            avgGenders: this.avgGenders,
-            avgNumOfFacesDetected: this.avgNumOfFacesDetected,
-            faceCoverSecondsCount: this.faceCoverSecondsCount,
-          };
-          localStorage.setItem('webcamData', JSON.stringify(data));
-
+          this.saveData();
           setTimeout(() => {
             this.router.navigate(['/stats']); // Navigate to stats component
           }, 2000); // Wait for 2 seconds then navigate to stats component
@@ -395,6 +428,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
 
   onClickSwitchWebcam() {
     this.showWebcam = !this.showWebcam;
+    document.documentElement.requestFullscreen();
     this.cdRef.detectChanges(); // Force change detection
     if (this.showWebcam) {
       this.startVideo();

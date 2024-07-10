@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, ChartType } from 'chart.js/auto';
 import { Router } from '@angular/router';
-import { math } from '@tensorflow/tfjs-core';
 
 @Component({
   selector: 'app-stats',
@@ -27,6 +26,7 @@ export class StatsComponent implements OnInit, AfterViewInit {
   avgGenders: number[] = [];
   avgNumOfFacesDetected: number[] = [];
   faceCoverSecondsCount: number = 0;
+  isDisqualified: boolean = false;
 
   private charts: { [key: string]: Chart } = {};
 
@@ -37,6 +37,15 @@ export class StatsComponent implements OnInit, AfterViewInit {
   constructor(private router: Router) {}
 
   ngOnInit() {
+    const failData = localStorage.getItem('failData');
+    if (failData) {
+      const parsedData = JSON.parse(failData);
+      this.isDisqualified = parsedData.isDisqualified;
+    }
+    if (this.isDisqualified) {
+      this.printResults(this.isDisqualified);
+    }
+
     const data = localStorage.getItem('webcamData');
     if (data) {
       const parsedData = JSON.parse(data);
@@ -46,7 +55,7 @@ export class StatsComponent implements OnInit, AfterViewInit {
       this.avgNumOfFacesDetected = parsedData.avgNumOfFacesDetected;
       this.faceCoverSecondsCount = parsedData.faceCoverSecondsCount;
     }
-    this.printResults();
+    this.printResults(this.isDisqualified);
   }
 
   ngAfterViewInit(): void {
@@ -128,9 +137,19 @@ export class StatsComponent implements OnInit, AfterViewInit {
     return `Their overall expression during the interview was ${overallExpression}.`;
   }
 
-  printResults() {
+  printResults(isDisqualified: boolean): void {
     const textElement: HTMLElement | null = document.getElementById(`text`);
     let summary: string[] = [];
+    if (isDisqualified) {
+      summary.push(`Disqualified for cheating.`);
+      if (textElement) {
+        textElement.style.fontSize = "50px";
+        textElement.style.color = "red";
+        textElement.style.fontWeight = "bold";
+        textElement.textContent = summary.join(' ');
+      }
+      return;
+    }
 
     summary.push(this.getCandidateGender());
 
