@@ -48,8 +48,8 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   private readonly AVG_EXPRESSION_INTERVAL = 5000; // Make it 1 minute === 60000 milliseconds
   private readonly AVG_AGE_GENDER_INTERVAL = 5000; // Make it 10 seconds === 10000 milliseconds
   private readonly AVG_NUM_OF_FACES_INTERVAL = 5000; // 5 seconds
-  public readonly WIDTH = 1280; // As .video-container video
-  public readonly HEIGHT = 720; // As .video-container video
+  public readonly WIDTH = 1280;
+  public readonly HEIGHT = 720;
 
   private detection: any;
   private resizedDetections: any;
@@ -65,7 +65,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   ) {}
 
   // Loading the models
-  async ngOnInit() {
+  async ngOnInit(): Promise<void> {
     Promise.all([
       faceapi.nets.ssdMobilenetv1.loadFromUri('/assets/models'),
       faceapi.nets.tinyFaceDetector.loadFromUri('/assets/models'),
@@ -74,12 +74,12 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     ]);
   }
 
-  ngAfterViewInit() {
+  ngAfterViewInit(): void {
     this.cdRef.detectChanges();
   }
 
-  // Asks for webcam permission
-  startVideo() {
+  // Asks for webcam permission to start the process
+  startVideo(): void {
     this.videoInput = this.video.nativeElement;
     navigator.mediaDevices
       .getUserMedia({ video: {}, audio: false })
@@ -92,7 +92,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   }
 
   // Saves the top expression at each detection
-  saveTopExpression(detections: any[]) {
+  saveTopExpression(detections: any[]): void {
     detections.forEach((detection) => {
       const expressions = detection.expressions;
       const expressionsArray = Object.entries(expressions);
@@ -105,7 +105,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   }
 
   // Saves the average expression (called every 1 minutes)
-  applyBellCurve() {
+  applyBellCurve(): void {
     const highestExpressionsCopy = [...this.highestExpressions];
 
     // Count the frequency of each expression
@@ -180,7 +180,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   }
 
   // Saves the average age (called every 10 seconds)
-  saveAvgAge() {
+  saveAvgAge(): void {
     let lastTenPredictedAges: number[] = this.predictedAges.slice(-10);
     let sum: number = lastTenPredictedAges.reduce((acc, val) => acc + val, 0);
     let avgAge: number = sum / lastTenPredictedAges.length;
@@ -193,12 +193,12 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   }
 
   // Saves the gender at each detection
-  saveGender(detections: any[]) {
+  saveGender(detections: any[]): void {
     this.predictedGenders.push(detections[0].gender);
   }
 
   // Saves the average gender (called every 10 seconds)
-  saveAvgGender() {
+  saveAvgGender(): void {
     const predictedGendersCopy = [...this.predictedGenders];
     let maleCount = 0;
     let femaleCount = 0;
@@ -215,12 +215,12 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   }
 
   // Saves number of faces detected
-  saveNumOfFacesDetected(detections: any[]) {
+  saveNumOfFacesDetected(detections: any[]): void {
     this.numOfFacesDetected.push(detections.length);
   }
 
   // Saves the average number of faces detected (called every 5)
-  saveAvgNumOfFacesDetected() {
+  saveAvgNumOfFacesDetected(): void {
     const numOfFacesDetectedCopy = [...this.numOfFacesDetected];
     let sum = numOfFacesDetectedCopy.reduce((acc, val) => acc + val, 0);
     let avgNum = sum / numOfFacesDetectedCopy.length;
@@ -235,14 +235,14 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   }
 
   // Alerts the user if their faces isn't visible + increments faceCoverSecondsCount
-  alertUser() {
+  alertUser(): void {
     this.faceCoverSecondsCount++;
     // alert("No face detected! Please ensure your face is visible to the camera."); // Could be changed afterwards since alert() stops the execution of the program
     // console.log(`The face was covered for ${this.faceCoverSecondsCount}s`);
   }
 
   // Saves the data in local storage to be retrieved in the stats page
-  saveData() {
+  saveData(): void {
     // NOTE: WHEN THE USER `RESTART` THE PROCESS, THIS ISSUE DOES NOT OCCUR =>
     // REMOVING THE FIRST ELEMENT REMOVES A CRUCIAL VALUE FROM EACH ARRAY
     if (this.avgAges[0] === 0) {
@@ -265,7 +265,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   }
 
   // Checks if the user exits the fullscreen
-  checkFullScreen() {
+  checkFullScreen(): void {
     const DURATION = 100; // Make it 10s. <10 seconds outside full screen is fine
     let timeAllowedOutsideFullScreen: number = DURATION;
     let checkInterval: any;
@@ -315,7 +315,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   }
 
   // Sets a timer which directs to the statistics page after 5 minutes
-  startTimer() {
+  startTimer(): void {
     const DURATION: number = 100; // 300s = 5m
     let timeLeft: number = DURATION;
     let minutes: number = 0;
@@ -349,6 +349,39 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     } else {
       console.error('Timer display element not found');
     }
+  }
+
+  // Called when the button id="begin" is pressed
+  beginInterview(): void {
+    localStorage.clear();
+    this.showWebcam = !this.showWebcam;
+    document.documentElement.requestFullscreen();
+    this.cdRef.detectChanges(); // Force change detection
+    if (this.showWebcam) {
+      this.startVideo();
+    }
+  }
+
+  // Called when the button id="start" is pressed or when the users exits full screen during the interview
+  openModal(modalName: string): void {
+    let modal: HTMLElement | null;
+    if (modalName === 'begin') {
+      modal = document.getElementById('beginModal');
+    } else if (modalName === 'warning') {
+      modal = document.getElementById('warningModal');
+    } else {
+      console.error('Modal element not found');
+      return;
+    }
+    if (modal) {
+      modal.style.display = 'block';
+    }
+  }
+
+  // Called when the button id="fullscreen" is pressed
+  fullScreen(): void {
+    document.documentElement.requestFullscreen();
+    this.isOutsideFullScreen = false;
   }
 
   async detectFaces() {
@@ -432,35 +465,5 @@ export class WebcamComponent implements OnInit, AfterViewInit {
           this.AVG_NUM_OF_FACES_INTERVAL
         );
       });
-  }
-
-  beginInterview() {
-    localStorage.clear();
-    this.showWebcam = !this.showWebcam;
-    document.documentElement.requestFullscreen();
-    this.cdRef.detectChanges(); // Force change detection
-    if (this.showWebcam) {
-      this.startVideo();
-    }
-  }
-
-  openModal(modalName: string) {
-    let modal: HTMLElement | null;
-    if (modalName === 'begin') {
-      modal = document.getElementById('beginModal');
-    } else if (modalName === 'warning') {
-      modal = document.getElementById('warningModal');
-    } else {
-      console.error('Modal element not found');
-      return;
-    }
-    if (modal) {
-      modal.style.display = 'block';
-    }
-  }
-
-  fullScreen() {
-    document.documentElement.requestFullscreen();
-    this.isOutsideFullScreen = false;
   }
 }
