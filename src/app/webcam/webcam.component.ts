@@ -19,42 +19,44 @@ import * as math from 'mathjs';
   styleUrl: './webcam.component.css',
 })
 export class WebcamComponent implements OnInit, AfterViewInit {
-  detectionInterval: NodeJS.Timeout | undefined;
-  avgNumOfFacesInterval: NodeJS.Timeout | undefined;
-  avgAgeGenderInterval: NodeJS.Timeout | undefined;
-  avgExpressionInterval: NodeJS.Timeout | undefined;
-
-  showWebcam: boolean = false;
-  isDisqualified: boolean = false;
-  isOutsideFullScreen: boolean = false;
-
-  highestExpressions: string[] = []; // Saves the highest expression every second for 1m (then resets)
-  avgExpressions: string[] = []; // Saves the average expression detected over 1-minute intervals
-  predictedAges: number[] = []; // Saves the last 30 predicted ages
-  avgAges: number[] = []; // Saves the average age calculated over 10-seconds intervals
-  predictedGenders: string[] = []; // Saves the predicted genders every second for 10s (then resets)
-  avgGenders: number[] = []; // Saves the average gender calculated over 10-seconds intervals
-  numOfFacesDetected: number[] = []; // Saves the # of faces detected every second for 5s (then resets)
-  avgNumOfFacesDetected: number[] = []; // Save the average # of faces detected over 5-seconds intervals
-  faceCoverSecondsCount = 0; // Saves the cumulative time in seconds that the face was covered
-
-  DETECTION_INTERVAL = 1000; // 1 second
-  AVG_EXPRESSION_INTERVAL = 5000; // Make it 1 minute === 60000 milliseconds
-  AVG_AGE_GENDER_INTERVAL = 5000; // Make it 10 seconds === 10000 milliseconds
-  AVG_NUM_OF_FACES_INTERVAL = 5000; // 5 seconds
-  WIDTH = 1280; // As .video-container video
-  HEIGHT = 720; // As .video-container video
   @ViewChild('video')
-  public video!: ElementRef;
+  private video!: ElementRef;
+
   @ViewChild('canvas')
-  public canvasRef!: ElementRef;
-  stream: any;
-  detection: any;
-  resizedDetections: any;
-  canvas: any;
-  canvasEl: any;
-  displaySize: any;
-  videoInput: any;
+  private canvasRef!: ElementRef;
+
+  private detectionInterval!: NodeJS.Timeout;
+  private avgNumOfFacesInterval!: NodeJS.Timeout;
+  private avgAgeGenderInterval!: NodeJS.Timeout;
+  private avgExpressionInterval!: NodeJS.Timeout;
+
+  private highestExpressions: string[] = []; // Saves the highest expression every second for 1m (then resets)
+  private avgExpressions: string[] = []; // Saves the average expression detected over 1-minute intervals
+  private predictedAges: number[] = []; // Saves the last 30 predicted ages
+  private avgAges: number[] = []; // Saves the average age calculated over 10-seconds intervals
+  private predictedGenders: string[] = []; // Saves the predicted genders every second for 10s (then resets)
+  private avgGenders: number[] = []; // Saves the average gender calculated over 10-seconds intervals
+  private numOfFacesDetected: number[] = []; // Saves the # of faces detected every second for 5s (then resets)
+  private avgNumOfFacesDetected: number[] = []; // Save the average # of faces detected over 5-seconds intervals
+  private faceCoverSecondsCount = 0; // Saves the cumulative time in seconds that the face was covered
+
+  private isDisqualified: boolean = false;
+  public showWebcam: boolean = false;
+  public isOutsideFullScreen: boolean = false;
+
+  private readonly DETECTION_INTERVAL = 1000; // 1 second
+  private readonly AVG_EXPRESSION_INTERVAL = 5000; // Make it 1 minute === 60000 milliseconds
+  private readonly AVG_AGE_GENDER_INTERVAL = 5000; // Make it 10 seconds === 10000 milliseconds
+  private readonly AVG_NUM_OF_FACES_INTERVAL = 5000; // 5 seconds
+  public readonly WIDTH = 1280; // As .video-container video
+  public readonly HEIGHT = 720; // As .video-container video
+
+  private detection: any;
+  private resizedDetections: any;
+  private canvas: any;
+  private canvasEl: any;
+  private displaySize: any;
+  private videoInput: any;
 
   constructor(
     private elRef: ElementRef,
@@ -70,6 +72,10 @@ export class WebcamComponent implements OnInit, AfterViewInit {
       faceapi.nets.faceExpressionNet.loadFromUri('/assets/models'),
       faceapi.nets.ageGenderNet.loadFromUri('/assets/models'),
     ]);
+  }
+
+  ngAfterViewInit() {
+    this.cdRef.detectChanges();
   }
 
   // Asks for webcam permission
@@ -426,10 +432,6 @@ export class WebcamComponent implements OnInit, AfterViewInit {
           this.AVG_NUM_OF_FACES_INTERVAL
         );
       });
-  }
-
-  ngAfterViewInit() {
-    this.cdRef.detectChanges(); // Ensure detection cycle has run
   }
 
   onClickSwitchWebcam() {
