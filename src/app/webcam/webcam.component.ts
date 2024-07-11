@@ -1,11 +1,10 @@
 import { CommonModule } from '@angular/common';
 import {
+  Component,
+  OnInit,
   AfterViewInit,
   ChangeDetectorRef,
-  Component,
   ElementRef,
-  model,
-  OnInit,
   ViewChild,
 } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
@@ -100,37 +99,6 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   }
 
   // Saves the average expression (called every 1 minutes)
-  // saveAvgExpression() {
-  //   const expressionsCount: { [key: string]: number } = {
-  //     neutral: 0,
-  //     happy: 0,
-  //     sad: 0,
-  //     angry: 0,
-  //     fearful: 0,
-  //     disgusted: 0,
-  //     surprised: 0,
-  //   };
-
-  //   const highestExpressionsCopy = [...this.highestExpressions];
-
-  //   highestExpressionsCopy.forEach((expr) => {
-  //     expressionsCount[expr]++;
-  //   });
-
-  //   const counts = Object.values(expressionsCount);
-  //   const maxCount = Math.max(...counts);
-
-  //   const avgExpression = Object.keys(expressionsCount).find(
-  //     (expression) => expressionsCount[expression] === maxCount
-  //   );
-
-  //   this.highestExpressions = [];
-  //   if (avgExpression) {
-  //     this.avgExpressions.push(avgExpression);
-  //     // console.log(`The average face expression after 1m is "${avgExpression}"`);
-  //   }
-  // }
-
   applyBellCurve() {
     const highestExpressionsCopy = [...this.highestExpressions];
 
@@ -488,7 +456,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     }
   }
 
-  fullScreen(){
+  fullScreen() {
     document.documentElement.requestFullscreen();
     this.isOutsideFullScreen = false;
   }
