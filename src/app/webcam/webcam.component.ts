@@ -66,12 +66,16 @@ export class WebcamComponent implements OnInit, AfterViewInit {
 
   // Loading the models
   async ngOnInit(): Promise<void> {
-    Promise.all([
-      faceapi.nets.ssdMobilenetv1.loadFromUri('/assets/models'),
-      faceapi.nets.tinyFaceDetector.loadFromUri('/assets/models'),
-      faceapi.nets.faceExpressionNet.loadFromUri('/assets/models'),
-      faceapi.nets.ageGenderNet.loadFromUri('/assets/models'),
-    ]);
+    try {
+      await Promise.all([
+        faceapi.nets.ssdMobilenetv1.loadFromUri('/assets/models'),
+        faceapi.nets.tinyFaceDetector.loadFromUri('/assets/models'),
+        faceapi.nets.faceExpressionNet.loadFromUri('/assets/models'),
+        faceapi.nets.ageGenderNet.loadFromUri('/assets/models'),
+      ]);
+    } catch (error) {
+      console.log(`Error loading models`, error);
+    }
   }
 
   ngAfterViewInit(): void {
