@@ -31,7 +31,6 @@ export class StatsComponent implements OnInit, AfterViewInit {
   private charts: { [key: string]: Chart } = {};
 
   restartProcess() {
-    localStorage.clear();
     this.router.navigate(['']);
   }
 
@@ -144,9 +143,9 @@ export class StatsComponent implements OnInit, AfterViewInit {
     if (isDisqualified) {
       summary.push(`Disqualified for cheating.`);
       if (textElement) {
-        textElement.style.fontSize = "50px";
-        textElement.style.color = "red";
-        textElement.style.fontWeight = "bold";
+        textElement.style.fontSize = '50px';
+        textElement.style.color = 'red';
+        textElement.style.fontWeight = 'bold';
         textElement.textContent = summary.join(' ');
       }
       return;

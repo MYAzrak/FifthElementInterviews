@@ -434,7 +434,8 @@ export class WebcamComponent implements OnInit, AfterViewInit {
       });
   }
 
-  onClickSwitchWebcam() {
+  beginInterview() {
+    localStorage.clear();
     this.showWebcam = !this.showWebcam;
     document.documentElement.requestFullscreen();
     this.cdRef.detectChanges(); // Force change detection
