@@ -68,7 +68,7 @@ select {
   padding: 10px 20px;
   background-color: rgb(0, 51, 122);
   color: white;
-  border: none;
+  border: 1px solid black;
   border-radius: 10px;
   font-size: 20px;
   cursor: pointer;
