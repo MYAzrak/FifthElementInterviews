@@ -62,7 +62,7 @@ h1 {
   transform: translate(-50%, -50%);
 }
 
-#timer {
+#interview-timer {
   position: absolute;
   bottom: 1px;
   left: 50%;

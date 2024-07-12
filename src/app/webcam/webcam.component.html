@@ -10,7 +10,8 @@
     <p>1. You need to position your webcam directly in front of you, ensuring that you are centered in the frame.</p>
     <p>2. You need to do this on a PC/laptop, not on your phone.</p>
     <p>3- Your interview will be recorded and saved for 3 months.</p>
-    <p>4- Your screen will also be recorded during the interview (press the red button top right and choose 'Entire Screen').</p>
+    <p>4- Your screen will also be recorded during the interview (press the red button top right and choose 'Entire
+      Screen').</p>
     <p>5- You will be in full-screen mode throughout the interview.</p>
     <p>6- If you exit full-screen mode for more than 10 seconds, you will be <b>disqualified</b> for cheating.</p>
     <button (click)="beginInterview()" id="begin" disabled>Understood. Let's Begin!</button>
@@ -19,8 +20,7 @@
 
 <div *ngIf="isOutsideFullScreen" id="warningModal" class="modal">
   <div class="modal-content">
-    <p><b>Please be informed that:</b></p>
-    <p>4- If you exit full-screen mode for more than 10 seconds, you will be <b>disqualified</b>.</p>
+    <p>Please, go back to full-screen. <span id="time-left"></span> left.</p>
     <button (click)="fullScreen()" id="fullscreen">Fullscreen</button>
   </div>
 </div>
@@ -29,4 +29,4 @@
   <video #video [width]="WIDTH" [height]="HEIGHT" autoplay muted></video>
   <div #canvas id="canvas"></div>
 </div>
-<div id="timer" *ngIf="showWebcam">5:00</div>
+<div id="interview-timer" *ngIf="showWebcam">5:00</div>

@@ -29,6 +29,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   private avgNumOfFacesInterval!: NodeJS.Timeout;
   private avgAgeGenderInterval!: NodeJS.Timeout;
   private avgExpressionInterval!: NodeJS.Timeout;
+  private startCheckInterval!: NodeJS.Timeout;
 
   private highestExpressions: string[] = []; // Saves the highest expression every second for 1m (then resets)
   private avgExpressions: string[] = []; // Saves the average expression detected over 1-minute intervals
@@ -270,7 +271,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
 
   // Checks if the user exits the fullscreen
   checkFullScreen(): void {
-    const DURATION = 100; // Make it 10s. <10 seconds outside full screen is fine
+    const DURATION = 10; // Make it 10s. <10 seconds outside full screen is fine
     let timeAllowedOutsideFullScreen: number = DURATION;
     let checkInterval: any;
 
@@ -282,8 +283,13 @@ export class WebcamComponent implements OnInit, AfterViewInit {
             console.log(
               `Please, go back to full-screen. ${timeAllowedOutsideFullScreen}s left`
             );
-            this.isOutsideFullScreen = true;
-            this.openModal('warning');
+
+            // if (document.getElementById('time-left')) {
+            //   document.getElementById('time-left').innerHTML =
+            //     timeAllowedOutsideFullScreen.toString();
+            //   this.isOutsideFullScreen = true;
+            //   this.openModal('warning');
+            // }
 
             if (timeAllowedOutsideFullScreen === 0) {
               clearInterval(checkInterval);
@@ -320,30 +326,32 @@ export class WebcamComponent implements OnInit, AfterViewInit {
 
   // Sets a timer which directs to the statistics page after 5 minutes
   startTimer(): void {
-    const DURATION: number = 100; // 300s = 5m
+    const DURATION: number = 15; // 300s = 5m
     let timeLeft: number = DURATION;
     let minutes: number = 0;
     let seconds: number = 0;
 
-    const timerDisplay = document.getElementById('timer');
-    if (timerDisplay) {
-      const timerInterval = window.setInterval(() => {
+    const interviewTimerDisplay = document.getElementById('interview-timer');
+    if (interviewTimerDisplay) {
+      const interviewTimerInterval = window.setInterval(() => {
         minutes = Math.floor(timeLeft / 60);
         seconds = timeLeft % 60;
 
-        timerDisplay.textContent = `${minutes}:${
+        interviewTimerDisplay.textContent = `${minutes}:${
           seconds < 10 ? '0' + seconds : seconds
         }`;
 
+        // if (document.exitFullscreen) {
         this.checkFullScreen();
+        // }
 
         if (timeLeft-- < 0) {
-          clearInterval(timerInterval);
+          clearInterval(interviewTimerInterval);
           clearInterval(this.detectionInterval);
           clearInterval(this.avgNumOfFacesInterval);
           clearInterval(this.avgAgeGenderInterval);
           clearInterval(this.avgExpressionInterval);
-          timerDisplay.textContent = 'Directing to Statistics';
+          interviewTimerDisplay.textContent = 'Directing to Statistics';
           this.saveData();
           setTimeout(() => {
             this.router.navigate(['/stats']); // Navigate to stats component

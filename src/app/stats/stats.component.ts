@@ -59,6 +59,9 @@ export class StatsComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    }
     this.createCharts();
     this.showSelectedChart();
   }
