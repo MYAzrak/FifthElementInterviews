@@ -388,6 +388,47 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     this.isOutsideFullScreen = false;
   }
 
+  // Called when the button id="capture" is pressed for screen recording
+  async screenRecord(): Promise<void> {
+    let beginButton = document.getElementById('begin') as HTMLButtonElement;
+    if (!beginButton) {
+      console.error('Start button element not found');
+      return;
+    }
+
+    let captureButton = document.getElementById('capture') as HTMLButtonElement;
+    if (!captureButton) {
+      console.error('Capture button element not found');
+      return;
+    }
+
+    captureButton.addEventListener('click', async () => {
+      beginButton.disabled = false;
+      try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+        });
+
+        const recorder = new MediaRecorder(stream);
+        recorder.start();
+
+        const [video] = stream.getVideoTracks();
+        video.addEventListener('ended', () => {
+          recorder.stop();
+        });
+
+        recorder.addEventListener('dataavailable', (evt) => {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(evt.data);
+          a.download = 'capture.webm';
+          a.click();
+        });
+      } catch (err) {
+        console.error('Error starting screen recording:', err);
+      }
+    });
+  }
+
   async detectFaces() {
     this.elRef.nativeElement
       .querySelector('video')

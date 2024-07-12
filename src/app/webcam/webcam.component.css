@@ -122,6 +122,22 @@ h1 {
   color: red;
 }
 
+#capture {
+  position: fixed;
+  right: 10%;
+  width: 35px;
+  height: 35px;
+  background-color: red;
+  border: 1px solid black;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+#capture:hover {
+  background-color: darkred;
+}
+
 #begin,
 #fullscreen {
   padding: 10px 50px;
@@ -137,4 +153,11 @@ h1 {
 #begin:hover,
 #fullscreen:hover {
   background-color: rgb(51, 153, 255);
+}
+
+#begin:disabled {
+  border: 1px solid #999999;
+  background-color: #cccccc;
+  color: #666666;
+  cursor: default;
 }
