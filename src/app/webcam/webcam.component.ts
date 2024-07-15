@@ -284,12 +284,8 @@ export class WebcamComponent implements OnInit, AfterViewInit {
               `Please, go back to full-screen. ${timeAllowedOutsideFullScreen}s left`
             );
 
-            // if (document.getElementById('time-left')) {
-            //   document.getElementById('time-left').innerHTML =
-            //     timeAllowedOutsideFullScreen.toString();
-            //   this.isOutsideFullScreen = true;
-            //   this.openModal('warning');
-            // }
+            this.isOutsideFullScreen = true;
+            this.openModal('warning');
 
             if (timeAllowedOutsideFullScreen === 0) {
               clearInterval(checkInterval);
@@ -411,7 +407,6 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     }
 
     captureButton.addEventListener('click', async () => {
-      beginButton.disabled = false;
       try {
         const stream = await navigator.mediaDevices.getDisplayMedia({
           video: true,
@@ -431,6 +426,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
           a.download = 'capture.webm';
           a.click();
         });
+        beginButton.disabled = false;
       } catch (err) {
         console.error('Error starting screen recording:', err);
       }

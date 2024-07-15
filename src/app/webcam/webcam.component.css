@@ -134,7 +134,8 @@ h1 {
   transition: background-color 0.3s;
 }
 
-#capture:hover {
+#capture:hover,
+#fullscreen:hover {
   background-color: darkred;
 }
 
@@ -150,8 +151,11 @@ h1 {
   transition: background-color 0.3s;
 }
 
-#begin:hover,
-#fullscreen:hover {
+#fullscreen {
+  background-color: red;
+}
+
+#begin:hover {
   background-color: rgb(51, 153, 255);
 }
 

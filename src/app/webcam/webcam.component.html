@@ -14,14 +14,14 @@
       Screen').</p>
     <p>5- You will be in full-screen mode throughout the interview.</p>
     <p>6- If you exit full-screen mode for more than 10 seconds, you will be <b>disqualified</b> for cheating.</p>
-    <button (click)="beginInterview()" id="begin" disabled>Understood. Let's Begin!</button>
+    <button (click)="beginInterview()" id="begin" >Understood. Let's Begin!</button>
   </div>
 </div>
 
 <div *ngIf="isOutsideFullScreen" id="warningModal" class="modal">
   <div class="modal-content">
-    <p>Please, go back to full-screen. <span id="time-left"></span> left.</p>
-    <button (click)="fullScreen()" id="fullscreen">Fullscreen</button>
+    <p><b>Please, go back to full-screen.</b></p>
+    <button (click)="fullScreen()" id="fullscreen">Full-screen</button>
   </div>
 </div>
 
