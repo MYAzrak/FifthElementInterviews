@@ -14,13 +14,13 @@
       Screen').</p>
     <p>5- You will be in full-screen mode throughout the interview.</p>
     <p>6- If you exit full-screen mode for more than 10 seconds, you will be <b>disqualified</b> for cheating.</p>
-    <button (click)="beginInterview()" id="begin" >Understood. Let's Begin!</button>
+    <button (click)="beginInterview()" id="begin">Understood. Let's Begin!</button>
   </div>
 </div>
 
-<div *ngIf="isOutsideFullScreen" id="warningModal" class="modal">
+<div id="warningModal" class="modal">
   <div class="modal-content">
-    <p><b>Please, go back to full-screen.</b></p>
+    <p><b>Please, go back to full-screen. {{subTimerDisplay}}s left</b></p>
     <button (click)="fullScreen()" id="fullscreen">Full-screen</button>
   </div>
 </div>
@@ -29,4 +29,4 @@
   <video #video [width]="WIDTH" [height]="HEIGHT" autoplay muted></video>
   <div #canvas id="canvas"></div>
 </div>
-<div id="interview-timer" *ngIf="showWebcam">5:00</div>
+<div id="interview-timer" *ngIf="showWebcam">{{mainTimerDisplay}}</div>

@@ -3,6 +3,7 @@ import {
   Component,
   OnInit,
   AfterViewInit,
+  OnDestroy,
   ChangeDetectorRef,
   ElementRef,
   ViewChild,
@@ -18,7 +19,7 @@ import * as math from 'mathjs';
   templateUrl: './webcam.component.html',
   styleUrl: './webcam.component.css',
 })
-export class WebcamComponent implements OnInit, AfterViewInit {
+export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('video')
   private video!: ElementRef;
 
@@ -29,7 +30,8 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   private avgNumOfFacesInterval!: NodeJS.Timeout;
   private avgAgeGenderInterval!: NodeJS.Timeout;
   private avgExpressionInterval!: NodeJS.Timeout;
-  private startCheckInterval!: NodeJS.Timeout;
+  private mainTimerInterval!: NodeJS.Timeout;
+  private subTimerInterval!: NodeJS.Timeout;
 
   private highestExpressions: string[] = []; // Saves the highest expression every second for 1m (then resets)
   private avgExpressions: string[] = []; // Saves the average expression detected over 1-minute intervals
@@ -44,11 +46,15 @@ export class WebcamComponent implements OnInit, AfterViewInit {
   private isDisqualified: boolean = false;
   public showWebcam: boolean = false;
   public isOutsideFullScreen: boolean = false;
+  public mainTimerDisplay: string = '';
+  public subTimerDisplay: string = '';
 
   private readonly DETECTION_INTERVAL = 1000; // 1 second
   private readonly AVG_EXPRESSION_INTERVAL = 5000; // Make it 1 minute === 60000 milliseconds
   private readonly AVG_AGE_GENDER_INTERVAL = 5000; // Make it 10 seconds === 10000 milliseconds
   private readonly AVG_NUM_OF_FACES_INTERVAL = 5000; // 5 seconds
+  private readonly MAIN_TIMER_DURATION = 30; // Make it 300 === 5 minutes in seconds
+  private readonly SUB_TIMER_DURATION = 10; // 10 seconds
   public readonly WIDTH = 1280;
   public readonly HEIGHT = 720;
 
@@ -83,6 +89,136 @@ export class WebcamComponent implements OnInit, AfterViewInit {
     this.cdRef.detectChanges();
   }
 
+  ngOnDestroy(): void {
+    this.cleanupTimers();
+    this.removeFullscreenListener();
+  }
+
+  private cleanupTimers() {
+    clearInterval(this.detectionInterval);
+    clearInterval(this.avgNumOfFacesInterval);
+    clearInterval(this.avgAgeGenderInterval);
+    clearInterval(this.avgExpressionInterval);
+    clearInterval(this.mainTimerInterval);
+    clearInterval(this.subTimerInterval);
+  }
+
+  private removeFullscreenListener() {
+    document.removeEventListener(
+      'fullscreenchange',
+      this.handleFullScreenChange
+    );
+  }
+
+  private startMainTimer(): void {
+    let timeLeft: number = this.MAIN_TIMER_DURATION;
+    this.mainTimerInterval = setInterval(() => {
+      this.mainTimerDisplay = this.formatTime(timeLeft);
+      if (--timeLeft < 0) {
+        this.handleInterviewEnd();
+      }
+    }, 1000);
+  }
+
+  private formatTime(seconds: number): string {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+  }
+
+  private handleInterviewEnd(): void {
+    this.mainTimerDisplay = 'Directing to Statistics';
+    this.saveData();
+    this.cleanupTimers();
+    setTimeout(() => {
+      this.router.navigate(['/stats']); // Navigate to stats component
+    }, 2000); // Wait for 2 seconds then navigate to stats component
+  }
+
+  private handleFullScreenChange = (): void => {
+    if (!document.fullscreenElement && this.router.url !== '/stats') {
+      this.isOutsideFullScreen = true;
+      this.openModal('warning');
+      this.startSubTimer();
+    } else {
+      this.isOutsideFullScreen = false;
+      this.stopSubTimer();
+    }
+  };
+
+  private startSubTimer(): void {
+    let timeLeft: number = this.SUB_TIMER_DURATION;
+    this.stopSubTimer();
+
+    this.subTimerInterval = setInterval(() => {
+      if (!document.fullscreenElement) {
+        this.subTimerDisplay = this.formatTime(timeLeft);
+        if (--timeLeft < 0) {
+          this.stopSubTimer();
+          this.handleDisqualification();
+        }
+      } else {
+        this.stopSubTimer();
+      }
+    }, 1000);
+  }
+
+  private stopSubTimer(): void {
+    clearInterval(this.subTimerInterval);
+    this.subTimerDisplay = '';
+  }
+
+  private handleDisqualification(): void {
+    this.isDisqualified = true;
+    console.log("You've been disqualified for cheating.");
+    const failData = {
+      isDisqualified: this.isDisqualified,
+    };
+    localStorage.setItem('failData', JSON.stringify(failData));
+    this.cleanupTimers();
+    this.router.navigate(['/stats']);
+  }
+
+  private setupFullScreenListener(): void {
+    document.addEventListener('fullscreenchange', this.handleFullScreenChange);
+  }
+
+  // Called when the button id="begin" is pressed
+  beginInterview(): void {
+    localStorage.clear();
+    this.showWebcam = true;
+    document.documentElement.requestFullscreen();
+    this.cdRef.detectChanges(); // Force change detection
+    this.startVideo();
+    this.setupFullScreenListener();
+  }
+
+  // Called when the button id="start" is pressed or when the users exits full screen during the interview
+  openModal(modalName: string): void {
+    const modal = document.getElementById(
+      modalName === 'begin' ? 'beginModal' : 'warningModal'
+    );
+    if (modal) {
+      modal.style.display = 'block';
+    } else {
+      console.error('Modal element not found');
+    }
+  }
+
+  closeModal(): void {
+    const modal = document.getElementById('warningModal');
+    if (modal) {
+      modal.style.display = '';
+    }
+  }
+
+  // Called when the button id="fullscreen" is pressed
+  fullScreen(): void {
+    document.documentElement.requestFullscreen();
+    this.closeModal();
+    this.isOutsideFullScreen = false;
+  }
+
   // Asks for webcam permission to start the process
   startVideo(): void {
     this.videoInput = this.video.nativeElement;
@@ -92,7 +228,7 @@ export class WebcamComponent implements OnInit, AfterViewInit {
       .catch((error) => console.log(error));
     this.detectFaces();
     setTimeout(() => {
-      this.startTimer();
+      this.startMainTimer();
     }, 3000); // Waits for 3s for the video to load
   }
 
@@ -267,129 +403,6 @@ export class WebcamComponent implements OnInit, AfterViewInit {
       faceCoverSecondsCount: this.faceCoverSecondsCount,
     };
     localStorage.setItem('webcamData', JSON.stringify(data));
-  }
-
-  // Checks if the user exits the fullscreen
-  checkFullScreen(): void {
-    const DURATION = 10; // Make it 10s. <10 seconds outside full screen is fine
-    let timeAllowedOutsideFullScreen: number = DURATION;
-    let checkInterval: any;
-
-    const startCheckInterval = () => {
-      if (!checkInterval) {
-        checkInterval = setInterval(() => {
-          if (!document.fullscreenElement) {
-            timeAllowedOutsideFullScreen--;
-            console.log(
-              `Please, go back to full-screen. ${timeAllowedOutsideFullScreen}s left`
-            );
-
-            this.isOutsideFullScreen = true;
-            this.openModal('warning');
-
-            if (timeAllowedOutsideFullScreen === 0) {
-              clearInterval(checkInterval);
-              console.log("You've been disqualified for cheating.");
-              this.isDisqualified = true;
-              const failData = {
-                isDisqualified: this.isDisqualified,
-              };
-              localStorage.setItem('failData', JSON.stringify(failData));
-              this.router.navigate(['/stats']);
-            }
-          } else {
-            console.log('All good now.. returning');
-            timeAllowedOutsideFullScreen = DURATION; // Reset the counter
-            clearInterval(checkInterval);
-            checkInterval = null; // Clear the interval
-          }
-        }, 1000);
-      }
-    };
-
-    document.addEventListener('fullscreenchange', () => {
-      if (!document.fullscreenElement) {
-        startCheckInterval();
-      } else {
-        timeAllowedOutsideFullScreen = 0; // Reset the counter if the user returns to full screen
-        if (checkInterval) {
-          clearInterval(checkInterval);
-          checkInterval = null;
-        }
-      }
-    });
-  }
-
-  // Sets a timer which directs to the statistics page after 5 minutes
-  startTimer(): void {
-    const DURATION: number = 15; // 300s = 5m
-    let timeLeft: number = DURATION;
-    let minutes: number = 0;
-    let seconds: number = 0;
-
-    const interviewTimerDisplay = document.getElementById('interview-timer');
-    if (interviewTimerDisplay) {
-      const interviewTimerInterval = window.setInterval(() => {
-        minutes = Math.floor(timeLeft / 60);
-        seconds = timeLeft % 60;
-
-        interviewTimerDisplay.textContent = `${minutes}:${
-          seconds < 10 ? '0' + seconds : seconds
-        }`;
-
-        // if (document.exitFullscreen) {
-        this.checkFullScreen();
-        // }
-
-        if (timeLeft-- < 0) {
-          clearInterval(interviewTimerInterval);
-          clearInterval(this.detectionInterval);
-          clearInterval(this.avgNumOfFacesInterval);
-          clearInterval(this.avgAgeGenderInterval);
-          clearInterval(this.avgExpressionInterval);
-          interviewTimerDisplay.textContent = 'Directing to Statistics';
-          this.saveData();
-          setTimeout(() => {
-            this.router.navigate(['/stats']); // Navigate to stats component
-          }, 2000); // Wait for 2 seconds then navigate to stats component
-        }
-      }, 1000); // Decrement 1 from the timer every second
-    } else {
-      console.error('Timer display element not found');
-    }
-  }
-
-  // Called when the button id="begin" is pressed
-  beginInterview(): void {
-    localStorage.clear();
-    this.showWebcam = !this.showWebcam;
-    document.documentElement.requestFullscreen();
-    this.cdRef.detectChanges(); // Force change detection
-    if (this.showWebcam) {
-      this.startVideo();
-    }
-  }
-
-  // Called when the button id="start" is pressed or when the users exits full screen during the interview
-  openModal(modalName: string): void {
-    let modal: HTMLElement | null;
-    if (modalName === 'begin') {
-      modal = document.getElementById('beginModal');
-    } else if (modalName === 'warning') {
-      modal = document.getElementById('warningModal');
-    } else {
-      console.error('Modal element not found');
-      return;
-    }
-    if (modal) {
-      modal.style.display = 'block';
-    }
-  }
-
-  // Called when the button id="fullscreen" is pressed
-  fullScreen(): void {
-    document.documentElement.requestFullscreen();
-    this.isOutsideFullScreen = false;
   }
 
   // Called when the button id="capture" is pressed for screen recording
