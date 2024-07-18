@@ -20,15 +20,20 @@ This Angular-based project provides an AI-powered simulated interview platform f
 ## Installation
 
 1. Clone the repository:
-   ```
+
+   ```sh
    git clone <repo-link>
    ```
+
 2. Navigate to the project directory:
-   ```
+
+   ```sh
    cd FaceAPI-Angular
    ```
+
 3. Install dependencies:
-   ```
+
+   ```sh
    npm install
    ```
 
@@ -36,7 +41,7 @@ This Angular-based project provides an AI-powered simulated interview platform f
 
 To start the development server, run:
 
-```
+```text
 ng serve
 ```
 
@@ -52,6 +57,7 @@ Navigate to `http://localhost:4200/` in your browser. The application will autom
 ## Privacy Considerations
 
 Before using the application, users must accept the following conditions:
+
 - The interview will be recorded and saved for 3 months.
 - The user's screen will be recorded during the interview.
 
@@ -60,6 +66,7 @@ Before using the application, users must accept the following conditions:
 ### Webcam Component
 
 The webcam component (`WebcamComponent`) handles the following:
+
 - Webcam integration and facial detection using [face-api.js](https://github.com/justadudewhohacks/face-api.js)
 - Screen recording functionality
 - Timer management
@@ -69,6 +76,7 @@ The webcam component (`WebcamComponent`) handles the following:
 ### Stats Component
 
 The stats component (`StatsComponent`) provides:
+
 - Post-interview analysis of collected data
 - Charts for visualizing expression, age, gender, and face detection data
 - Summary of the candidate's performance
@@ -77,4 +85,4 @@ The stats component (`StatsComponent`) provides:
 
 1. Implement a check to ensure the candidate chooses 'Entire Screen' for screen recording.
 2. Create a step-by-step guide for screen recording and transitioning to fullscreen mode.
-3. Add a pre-interview check for proper functioning of the candidate's microphone and camera, including visual mic levels similar to Microsoft Teams.
+3. Add a pre-interview check for proper functioning of the candidate's microphone and camera, including visual mic levels.
