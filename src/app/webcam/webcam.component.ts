@@ -452,8 +452,28 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
           a.click();
         });
         beginButton.disabled = false;
+        const fullScreenParas = document.getElementsByClassName(
+          'fullscreen-para'
+        ) as HTMLCollectionOf<HTMLElement>;
+        const guidelinesParas = document.getElementsByClassName(
+          'guidelines'
+        ) as HTMLCollectionOf<HTMLElement>;
+
+        for (let i = 0; i < fullScreenParas.length; i++) {
+          fullScreenParas[i].hidden = false;
+        }
+
+        for (let i = 0; i < guidelinesParas.length; i++) {
+          guidelinesParas[i].hidden = true;
+        }
+        captureButton.hidden = true;
       } catch (err) {
         console.error('Error starting screen recording:', err);
+        const entireScreenSpan = document.getElementById(
+          'entire-screen'
+        ) as HTMLElement;
+        entireScreenSpan.style.fontWeight = 'bold';
+        entireScreenSpan.style.color = 'red';
       }
     });
   }
