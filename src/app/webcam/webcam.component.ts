@@ -421,22 +421,34 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
 
     captureButton.addEventListener('click', async () => {
       try {
+        // Screen Capture API
         const stream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
+          video: {
+            displaySurface: 'monitor',
+          },
+          audio: true,
         });
 
+        // Check if the user selected the entire screen
+        const videoTrack = stream.getVideoTracks()[0];
+        if (videoTrack.getSettings().displaySurface !== 'monitor') {
+          throw new Error('Please select the entire screen for recording.');
+        }
+
+        // MediaStream Recording API
         const recorder = new MediaRecorder(stream);
         recorder.start();
 
         const [video] = stream.getVideoTracks();
         video.addEventListener('ended', () => {
           recorder.stop();
+          stream.getTracks().forEach((track) => track.stop());
         });
 
         recorder.addEventListener('dataavailable', (evt) => {
           const a = document.createElement('a');
           a.href = URL.createObjectURL(evt.data);
-          a.download = 'capture.webm';
+          a.download = 'screen_capture.mp4';
           a.click();
         });
         beginButton.disabled = false;
