@@ -11,11 +11,12 @@ import {
 import { Router, RouterModule } from '@angular/router';
 import * as faceapi from 'face-api.js';
 import * as math from 'mathjs';
+import { DeviceCheckComponent } from '../device-check/device-check.component';
 
 @Component({
   selector: 'app-webcam',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, DeviceCheckComponent],
   templateUrl: './webcam.component.html',
   styleUrl: './webcam.component.css',
 })
@@ -66,6 +67,8 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   private videoInput: any;
 
   public showModal: string = 'deviceCheck'; // or screenRecord or fullscreen;
+  public devicesReady: boolean = false;
+
   constructor(
     private elRef: ElementRef,
     private cdRef: ChangeDetectorRef,
@@ -218,6 +221,10 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     document.documentElement.requestFullscreen();
     this.closeModal();
     this.isOutsideFullScreen = false;
+  }
+
+  onDeviceCheckComplete(isReady: boolean) {
+    this.devicesReady = isReady;
   }
 
   // Asks for webcam permission to start the process

@@ -170,6 +170,5 @@ h1 {
 }
 
 .device-check-modal {
-  display: flex;
-  justify-content: center;
+  display: inline;
 }

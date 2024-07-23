@@ -7,8 +7,8 @@
   <div class="modal-content">
     @if (showModal === "deviceCheck") {
     <div class="device-check-modal">
-      <p>Checking devices</p>
-      <button class="next-modal" id="to-screen-record" (click)="showModal = 'screenRecord'">Next</button>
+      <app-device-check (deviceCheckComplete)="onDeviceCheckComplete($event)"></app-device-check>
+      <button class="next-modal" id="to-screen-record" (click)="showModal = 'screenRecord'" [disabled]="!devicesReady">Next</button>
     </div>
     } @else if (showModal === "screenRecord") {
     <div class="screen-record-modal">

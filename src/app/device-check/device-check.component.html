@@ -7,7 +7,9 @@
     <div class="audio-level-bar" [style.height.%]="audioLevel"></div>
   </div>
 
+  @if (!startedChecking) {
   <button (click)="startDeviceCheck()">Start Device Check</button>
-  <p *ngIf="checkComplete">Device check complete.</p>
+  } @else {
+    <b>Ensure that your face is showing and your mic is working to proceed</b>
+  }
 </div>
-

@@ -6,8 +6,11 @@ import {
   ElementRef,
   ViewChild,
   NgZone,
+  EventEmitter,
+  Output,
 } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
+import * as faceapi from 'face-api.js';
 
 @Component({
   selector: 'app-device-check',
@@ -17,6 +20,7 @@ import { Router, RouterModule } from '@angular/router';
   styleUrl: './device-check.component.css',
 })
 export class DeviceCheckComponent implements OnInit, OnDestroy {
+  @Output() deviceCheckComplete = new EventEmitter<boolean>();
   @ViewChild('videoElement') videoElement!: ElementRef<HTMLVideoElement>;
 
   private stream: MediaStream | null = null;
@@ -24,19 +28,34 @@ export class DeviceCheckComponent implements OnInit, OnDestroy {
   private analyser: AnalyserNode | null = null;
   private dataArray: Uint8Array | null = null;
   private animationFrameId: number | null = null;
+  private faceDetectionInterval: any;
 
   audioLevel: number = 0;
   checkComplete: boolean = false;
+  private isVoiceDetected: boolean = false;
+  private isFaceDetected: boolean = false;
+  public startedChecking: boolean = false;
 
   constructor(private ngZone: NgZone, private router: Router) {}
 
-  ngOnInit() {}
+  async ngOnInit() {
+    await this.loadFaceDetectionModels();
+  }
 
   ngOnDestroy() {
     this.stopDeviceCheck();
   }
 
+  async loadFaceDetectionModels() {
+    try {
+      await faceapi.nets.tinyFaceDetector.loadFromUri('/assets/models');
+    } catch (error) {
+      console.error('Error loading face detection models:', error);
+    }
+  }
+
   async startDeviceCheck() {
+    this.startedChecking = true;
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
         video: true,
@@ -59,10 +78,35 @@ export class DeviceCheckComponent implements OnInit, OnDestroy {
       this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
       this.updateAudioLevel();
 
-      this.checkComplete = true;
+      // Start face detection
+      this.startFaceDetection();
     } catch (error) {
+      alert('Please allow webcam access');
       console.error('Error accessing media devices:', error);
     }
+  }
+
+  startFaceDetection() {
+    const videoElement = this.videoElement.nativeElement;
+    this.faceDetectionInterval = setInterval(async () => {
+      const detections = await faceapi.detectAllFaces(
+        videoElement,
+        new faceapi.TinyFaceDetectorOptions()
+      );
+      this.isFaceDetected = detections.length > 0;
+      this.checkDevicesReady();
+    }, 1000); // Check every second
+  }
+
+  checkDevicesReady() {
+    if (this.isVoiceDetected && this.isFaceDetected) {
+      this.devicesReady();
+    }
+  }
+
+  devicesReady() {
+    this.checkComplete = true;
+    this.deviceCheckComplete.emit(true);
   }
 
   stopDeviceCheck() {
@@ -74,6 +118,9 @@ export class DeviceCheckComponent implements OnInit, OnDestroy {
     }
     if (this.audioContext) {
       this.audioContext.close();
+    }
+    if (this.faceDetectionInterval) {
+      clearInterval(this.faceDetectionInterval);
     }
     this.checkComplete = false;
   }
@@ -88,6 +135,8 @@ export class DeviceCheckComponent implements OnInit, OnDestroy {
 
         this.ngZone.run(() => {
           this.audioLevel = Math.min(100, (average / 128) * 100); // Normalize to 0-100 range
+          this.isVoiceDetected = this.audioLevel > 5; // Adjust this threshold as needed
+          this.checkDevicesReady();
         });
       }
       this.animationFrameId = requestAnimationFrame(() =>
