@@ -1,1 +1,13 @@
-<p>device-check works!</p>
+<div class="device-check-container">
+  <div class="video-container">
+    <video #videoElement autoplay playsinline></video>
+  </div>
+
+  <div class="audio-level-container">
+    <div class="audio-level-bar" [style.height.%]="audioLevel"></div>
+  </div>
+
+  <button (click)="startDeviceCheck()">Start Device Check</button>
+  <p *ngIf="checkComplete">Device check complete.</p>
+</div>
+
