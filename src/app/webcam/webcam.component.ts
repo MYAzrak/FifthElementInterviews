@@ -458,6 +458,9 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
         captureButton.hidden = true;
       } catch (err) {
         console.error('Error starting screen recording:', err);
+        alert(
+          'Please allow screen recording and choose "Entire Screen" as the share option. If done, please ignore this message and proceed to the next step.'
+        );
         const entireScreenSpan = document.getElementById(
           'entire-screen'
         ) as HTMLElement;
