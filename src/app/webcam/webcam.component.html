@@ -5,17 +5,36 @@
 
 <div *ngIf="!showWebcam" id="beginModal" class="modal">
   <div class="modal-content">
-    <button (click)="screenRecord()" id="capture"></button>
-    <h1><b>Please be informed that:</b></h1>
-    <p class="guidelines">1. You need to position your webcam directly in front of you, ensuring that you are centered in the frame.</p>
-    <p class="guidelines">2. You need to do this on a PC/laptop, not on your phone.</p>
-    <p class="guidelines">3- Your interview will be recorded and saved for 3 months.</p>
-    <p class="guidelines">4- Your screen will also be recorded during the interview (press the red button top right and choose
-      <span id="entire-screen">'Entire Screen'</span> ).
-    </p>
-    <p class="fullscreen-para" hidden>5- You will be in full-screen mode throughout the interview.</p>
-    <p class="fullscreen-para" hidden>6- If you exit full-screen mode for more than 10 seconds, you will be <b>disqualified</b> for cheating.</p>
-    <button (click)="beginInterview()" id="begin" disabled="true">Understood. Let's Begin!</button>
+    @if (showModal === "deviceCheck") {
+    <div class="device-check-modal">
+      <p>Checking devices</p>
+      <button class="next-modal" id="to-screen-record" (click)="showModal = 'screenRecord'">Next</button>
+    </div>
+    } @else if (showModal === "screenRecord") {
+    <div class="screen-record-modal">
+      <button (click)="screenRecord()" id="capture"></button>
+      <h1><b>Please be informed that:</b></h1>
+      <p>1. You need to position your webcam directly in front of you, ensuring that you are centered
+        in the frame.</p>
+      <p>2. You need to do this on a PC/laptop, not on your phone.</p>
+      <p>3- Your interview will be recorded and saved for 3 months.</p>
+      <p>4- Your screen will also be recorded during the interview (press the red button top right
+        and
+        choose
+        <span id="entire-screen">'Entire Screen'</span>).
+      </p>
+      <button class="next-modal" id="to-fullscreen" (click)="showModal = 'fullscreen'" disabled>Next</button>
+    </div>
+    } @else if (showModal === "fullscreen") {
+    <div class="fullscreen-modal">
+      <h1><b>Please be informed that:</b></h1>
+      <p>5- You will be in full-screen mode throughout the interview.</p>
+      <p>6- If you exit full-screen mode for more than 10 seconds, you will be
+        <b>disqualified</b> for cheating.
+      </p>
+      <button (click)="beginInterview()" id="begin">Understood. Let's Begin!</button>
+    </div>
+    }
   </div>
 </div>
 

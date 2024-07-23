@@ -65,6 +65,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   private displaySize: any;
   private videoInput: any;
 
+  public showModal: string = 'deviceCheck'; // or screenRecord or fullscreen;
   constructor(
     private elRef: ElementRef,
     private cdRef: ChangeDetectorRef,
@@ -407,9 +408,11 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Called when the button id="capture" is pressed for screen recording
   async screenRecord(): Promise<void> {
-    let beginButton = document.getElementById('begin') as HTMLButtonElement;
-    if (!beginButton) {
-      console.error('Start button element not found');
+    let toFullscreenButton = document.getElementById(
+      'to-fullscreen'
+    ) as HTMLButtonElement;
+    if (!toFullscreenButton) {
+      console.error('Next button element not found');
       return;
     }
 
@@ -451,21 +454,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
           a.download = 'screen_capture.mp4';
           a.click();
         });
-        beginButton.disabled = false;
-        const fullScreenParas = document.getElementsByClassName(
-          'fullscreen-para'
-        ) as HTMLCollectionOf<HTMLElement>;
-        const guidelinesParas = document.getElementsByClassName(
-          'guidelines'
-        ) as HTMLCollectionOf<HTMLElement>;
-
-        for (let i = 0; i < fullScreenParas.length; i++) {
-          fullScreenParas[i].hidden = false;
-        }
-
-        for (let i = 0; i < guidelinesParas.length; i++) {
-          guidelinesParas[i].hidden = true;
-        }
+        toFullscreenButton.disabled = false;
         captureButton.hidden = true;
       } catch (err) {
         console.error('Error starting screen recording:', err);

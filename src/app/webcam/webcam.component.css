@@ -139,6 +139,7 @@ h1 {
   background-color: darkred;
 }
 
+.next-modal,
 #begin,
 #fullscreen {
   padding: 10px 50px;
@@ -155,13 +156,20 @@ h1 {
   background-color: red;
 }
 
+.next-modal:hover,
 #begin:hover {
   background-color: rgb(51, 153, 255);
 }
 
+.next-modal:disabled,
 #begin:disabled {
   border: 1px solid #999999;
   background-color: #cccccc;
   color: #666666;
   cursor: default;
+}
+
+.device-check-modal {
+  display: flex;
+  justify-content: center;
 }
