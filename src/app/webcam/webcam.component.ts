@@ -69,6 +69,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   public showModal: string = 'deviceCheck'; // or screenRecord or fullscreen;
   public devicesReady: boolean = false;
 
+  private isInDevMode: boolean = true; // Assign true to show the canvas (faceapi squares) around the face
   constructor(
     private elRef: ElementRef,
     private cdRef: ChangeDetectorRef,
@@ -511,24 +512,31 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
             this.displaySize
           );
 
+          // Always call interpolateAgePredictions and store the results
+          const interpolatedAges = this.resizedDetections.map((detection: any) => {
+            return this.interpolateAgePredictions(detection.age);
+          });
+
           this.canvas
             .getContext('2d')
             .clearRect(0, 0, this.canvas.width, this.canvas.height);
-          faceapi.draw.drawDetections(this.canvas, this.resizedDetections);
-          faceapi.draw.drawFaceExpressions(this.canvas, this.resizedDetections);
 
-          this.resizedDetections.forEach((detection: any) => {
-            const { age, gender, genderProbability } = detection;
-            const interpolatedAge = this.interpolateAgePredictions(age);
+          if (this.isInDevMode) {
+            faceapi.draw.drawDetections(this.canvas, this.resizedDetections);
+            faceapi.draw.drawFaceExpressions(this.canvas, this.resizedDetections);
 
-            new faceapi.draw.DrawTextField(
-              [
-                `${Math.round(interpolatedAge)} years`,
-                `${gender} (${faceapi.utils.round(genderProbability)})`,
-              ],
-              detection.detection.box.bottomRight
-            ).draw(this.canvas);
-          });
+            this.resizedDetections.forEach((detection: any, index: number) => {
+              const { age, gender, genderProbability } = detection;
+              const interpolatedAge = interpolatedAges[index];
+              new faceapi.draw.DrawTextField(
+                [
+                  `${Math.round(interpolatedAge)} years`,
+                  `${gender} (${faceapi.utils.round(genderProbability)})`,
+                ],
+                detection.detection.box.bottomRight
+              ).draw(this.canvas);
+            });
+          }
 
           // Alerts the user if their face isn't showing
           if (this.resizedDetections.length === 0) {
