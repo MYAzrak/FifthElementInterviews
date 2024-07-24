@@ -20,7 +20,8 @@ import * as faceapi from 'face-api.js';
   styleUrl: './device-check.component.css',
 })
 export class DeviceCheckComponent implements OnInit, OnDestroy {
-  @Output() deviceCheckComplete = new EventEmitter<boolean>();
+  @Output() deviceCheckComplete: EventEmitter<boolean> =
+    new EventEmitter<boolean>();
   @ViewChild('videoElement') videoElement!: ElementRef<HTMLVideoElement>;
 
   private stream: MediaStream | null = null;
@@ -31,7 +32,6 @@ export class DeviceCheckComponent implements OnInit, OnDestroy {
   private faceDetectionInterval: any;
 
   audioLevel: number = 0;
-  checkComplete: boolean = false;
   private isVoiceDetected: boolean = false;
   private isFaceDetected: boolean = false;
   public startedChecking: boolean = false;
@@ -105,7 +105,6 @@ export class DeviceCheckComponent implements OnInit, OnDestroy {
   }
 
   devicesReady() {
-    this.checkComplete = true;
     this.deviceCheckComplete.emit(true);
   }
 
@@ -122,7 +121,6 @@ export class DeviceCheckComponent implements OnInit, OnDestroy {
     if (this.faceDetectionInterval) {
       clearInterval(this.faceDetectionInterval);
     }
-    this.checkComplete = false;
   }
 
   updateAudioLevel() {
