@@ -60,11 +60,17 @@ select {
 
 .buttons {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   width: 100%;
 }
 
-#restart {
+#feedback-form {
+  display: inline-block;
+  text-decoration: none;
+}
+
+#restart,
+#feedback-form {
   padding: 10px 20px;
   background-color: rgb(0, 51, 122);
   color: white;
@@ -73,10 +79,9 @@ select {
   font-size: 20px;
   cursor: pointer;
   transition: background-color 0.3s;
-  justify-content: center;
-  text-align: center;
 }
 
-#restart:hover {
+#restart:hover,
+#feedback-form:hover {
   background-color: rgb(51, 153, 255);
 }

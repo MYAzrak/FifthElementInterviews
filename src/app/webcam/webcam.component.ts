@@ -70,7 +70,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   public showModal: string = 'deviceCheck'; // or screenRecord or fullscreen;
   public devicesReady: boolean = false;
 
-  private isInDevMode: boolean = true; // Assign true to show the canvas (faceapi squares) around the face
+  private isInDevMode: boolean = false; // Assign true to show the canvas (faceapi squares) around the face
 
   // For screen recording
   private screenCaptureRecorder: MediaRecorder | null = null;
@@ -469,8 +469,6 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
       // MediaStream Recording API
       this.screenCaptureRecorder = new MediaRecorder(this.screenCaptureStream);
       this.screenCaptureRecorder.start();
-
-      const [video] = this.screenCaptureStream.getVideoTracks();
 
       this.screenCaptureRecorder.addEventListener('dataavailable', (evt) => {
         const a = document.createElement('a');
