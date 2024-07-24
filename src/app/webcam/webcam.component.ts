@@ -59,6 +59,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   public readonly WIDTH = 1280;
   public readonly HEIGHT = 720;
 
+  // facepai
   private detection: any;
   private resizedDetections: any;
   private canvas: any;
@@ -70,6 +71,11 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   public devicesReady: boolean = false;
 
   private isInDevMode: boolean = true; // Assign true to show the canvas (faceapi squares) around the face
+
+  // For screen recording
+  private screenCaptureRecorder: MediaRecorder | null = null;
+  private screenCaptureStream: MediaStream | null = null;
+
   constructor(
     private elRef: ElementRef,
     private cdRef: ChangeDetectorRef,
@@ -99,6 +105,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     this.removeFullscreenListener();
   }
 
+  // Stops mainTimer, subTimer, and all intervals returned by setInterval before routing to /stats
   private cleanupTimers() {
     clearInterval(this.detectionInterval);
     clearInterval(this.avgNumOfFacesInterval);
@@ -108,13 +115,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     clearInterval(this.subTimerInterval);
   }
 
-  private removeFullscreenListener() {
-    document.removeEventListener(
-      'fullscreenchange',
-      this.handleFullScreenChange
-    );
-  }
-
+  // Starts the mainTimer (the timer for the whole interview)
   private startMainTimer(): void {
     let timeLeft: number = this.MAIN_TIMER_DURATION;
     this.mainTimerInterval = setInterval(() => {
@@ -125,21 +126,25 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     }, 1000);
   }
 
+  // Used to format both subTimer and mainTimer
   private formatTime(seconds: number): string {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   }
 
+  // Called when the mainTimer ends
   private handleInterviewEnd(): void {
     this.mainTimerDisplay = 'Directing to Statistics';
+    this.stopScreenRecording(); // Stop recording before routing to /stats
     this.saveData();
     this.cleanupTimers();
     setTimeout(() => {
-      this.router.navigate(['/stats']); // Navigate to stats component
-    }, 2000); // Wait for 2 seconds then navigate to stats component
+      this.router.navigate(['/stats']);
+    }, 2000);
   }
 
+  // Listens to fullscreen change inside the webcam component during the interview
   private handleFullScreenChange = (): void => {
     if (!document.fullscreenElement && this.router.url !== '/stats') {
       this.isOutsideFullScreen = true;
@@ -151,9 +156,10 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   };
 
+  // Called when the user exits fullscreen during the interview
   private startSubTimer(): void {
     let timeLeft: number = this.SUB_TIMER_DURATION;
-    this.stopSubTimer();
+    this.stopSubTimer(); // Stops past subTimers
 
     this.subTimerInterval = setInterval(() => {
       if (!document.fullscreenElement) {
@@ -168,11 +174,13 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     }, 1000);
   }
 
+  // Stops the current running subTimer
   private stopSubTimer(): void {
     clearInterval(this.subTimerInterval);
     this.subTimerDisplay = '';
   }
 
+  // Called when the user exits fullscreen for more than 10s during the interview
   private handleDisqualification(): void {
     this.isDisqualified = true;
     console.log("You've been disqualified for cheating.");
@@ -181,15 +189,25 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     };
     localStorage.setItem('failData', JSON.stringify(failData));
     this.cleanupTimers();
+    this.stopScreenRecording();
     this.router.navigate(['/stats']);
   }
 
+  // Adds a fullscreen change listener when the interview begins
   private setupFullScreenListener(): void {
     document.addEventListener('fullscreenchange', this.handleFullScreenChange);
   }
 
+  // Removes the fullscreen change listener before routing to /stats
+  private removeFullscreenListener() {
+    document.removeEventListener(
+      'fullscreenchange',
+      this.handleFullScreenChange
+    );
+  }
+
   // Called when the button id="begin" is pressed
-  beginInterview(): void {
+  public beginInterview(): void {
     localStorage.clear();
     this.showWebcam = true;
     document.documentElement.requestFullscreen();
@@ -199,7 +217,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Called when the button id="start" is pressed or when the users exits full screen during the interview
-  openModal(modalName: string): void {
+  public openModal(modalName: string): void {
     const modal = document.getElementById(
       modalName === 'begin' ? 'beginModal' : 'warningModal'
     );
@@ -210,7 +228,8 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  closeModal(): void {
+  // Closes the warning modal when the user returns to full screen
+  private closeWarningModal(): void {
     const modal = document.getElementById('warningModal');
     if (modal) {
       modal.style.display = '';
@@ -218,18 +237,19 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Called when the button id="fullscreen" is pressed
-  fullScreen(): void {
+  public fullScreen(): void {
     document.documentElement.requestFullscreen();
-    this.closeModal();
+    this.closeWarningModal();
     this.isOutsideFullScreen = false;
   }
 
-  onDeviceCheckComplete(isReady: boolean) {
+  // Handles the completion event from the device-check component, determining whether the devices (mic and camera) are working properly
+  public onDeviceCheckComplete(isReady: boolean) {
     this.devicesReady = isReady;
   }
 
   // Asks for webcam permission to start the process
-  startVideo(): void {
+  private startVideo(): void {
     this.videoInput = this.video.nativeElement;
     navigator.mediaDevices
       .getUserMedia({ video: {}, audio: false })
@@ -242,7 +262,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Saves the top expression at each detection
-  saveTopExpression(detections: any[]): void {
+  private saveTopExpression(detections: any[]): void {
     detections.forEach((detection) => {
       const expressions = detection.expressions;
       const expressionsArray = Object.entries(expressions);
@@ -255,7 +275,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Saves the average expression (called every 1 minutes)
-  applyBellCurve(): void {
+  private applyBellCurve(): void {
     const highestExpressionsCopy = [...this.highestExpressions];
 
     // Count the frequency of each expression
@@ -321,7 +341,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Interpolates age predictions
-  interpolateAgePredictions(age: number): number {
+  private interpolateAgePredictions(age: number): number {
     this.predictedAges = [age].concat(this.predictedAges).slice(0, 30);
     const avgPredictedAge =
       this.predictedAges.reduce((total, a) => total + a, 0) /
@@ -330,7 +350,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Saves the average age (called every 10 seconds)
-  saveAvgAge(): void {
+  private saveAvgAge(): void {
     let lastTenPredictedAges: number[] = this.predictedAges.slice(-10);
     let sum: number = lastTenPredictedAges.reduce((acc, val) => acc + val, 0);
     let avgAge: number = sum / lastTenPredictedAges.length;
@@ -343,12 +363,12 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Saves the gender at each detection
-  saveGender(detections: any[]): void {
+  private saveGender(detections: any[]): void {
     this.predictedGenders.push(detections[0].gender);
   }
 
   // Saves the average gender (called every 10 seconds)
-  saveAvgGender(): void {
+  private saveAvgGender(): void {
     const predictedGendersCopy = [...this.predictedGenders];
     let maleCount = 0;
     let femaleCount = 0;
@@ -365,12 +385,12 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Saves number of faces detected
-  saveNumOfFacesDetected(detections: any[]): void {
+  private saveNumOfFacesDetected(detections: any[]): void {
     this.numOfFacesDetected.push(detections.length);
   }
 
   // Saves the average number of faces detected (called every 5)
-  saveAvgNumOfFacesDetected(): void {
+  private saveAvgNumOfFacesDetected(): void {
     const numOfFacesDetectedCopy = [...this.numOfFacesDetected];
     let sum = numOfFacesDetectedCopy.reduce((acc, val) => acc + val, 0);
     let avgNum = sum / numOfFacesDetectedCopy.length;
@@ -385,14 +405,14 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Alerts the user if their faces isn't visible + increments faceCoverSecondsCount
-  alertUser(): void {
+  private alertUser(): void {
     this.faceCoverSecondsCount++;
     // alert("No face detected! Please ensure your face is visible to the camera."); // Could be changed afterwards since alert() stops the execution of the program
     // console.log(`The face was covered for ${this.faceCoverSecondsCount}s`);
   }
 
   // Saves the data in local storage to be retrieved in the stats page
-  saveData(): void {
+  private saveData(): void {
     // NOTE: WHEN THE USER `RESTART` THE PROCESS, THIS ISSUE DOES NOT OCCUR =>
     // REMOVING THE FIRST ELEMENT REMOVES A CRUCIAL VALUE FROM EACH ARRAY
     if (this.avgAges[0] === 0) {
@@ -415,7 +435,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Called when the button id="capture" is pressed for screen recording
-  async screenRecord(): Promise<void> {
+  public async screenRecord(): Promise<void> {
     let toFullscreenButton = document.getElementById(
       'to-fullscreen'
     ) as HTMLButtonElement;
@@ -430,55 +450,65 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    captureButton.addEventListener('click', async () => {
-      try {
-        // Screen Capture API
-        const stream = await navigator.mediaDevices.getDisplayMedia({
-          video: {
-            displaySurface: 'monitor',
-          },
-          audio: true,
-        });
+    try {
+      // Screen Capture API
+      this.screenCaptureStream = await navigator.mediaDevices.getDisplayMedia({
+        video: {
+          displaySurface: 'monitor',
+        },
+        audio: true,
+      });
 
-        // Check if the user selected the entire screen
-        const videoTrack = stream.getVideoTracks()[0];
-        if (videoTrack.getSettings().displaySurface !== 'monitor') {
-          throw new Error('Please select the entire screen for recording.');
-        }
-
-        // MediaStream Recording API
-        const recorder = new MediaRecorder(stream);
-        recorder.start();
-
-        const [video] = stream.getVideoTracks();
-        video.addEventListener('ended', () => {
-          recorder.stop();
-          stream.getTracks().forEach((track) => track.stop());
-        });
-
-        recorder.addEventListener('dataavailable', (evt) => {
-          const a = document.createElement('a');
-          a.href = URL.createObjectURL(evt.data);
-          a.download = 'screen_capture.mp4';
-          a.click();
-        });
-        toFullscreenButton.disabled = false;
-        captureButton.hidden = true;
-      } catch (err) {
-        console.error('Error starting screen recording:', err);
-        alert(
-          'Please allow screen recording and choose "Entire Screen" as the share option. If done, please ignore this message and proceed to the next step.'
-        );
-        const entireScreenSpan = document.getElementById(
-          'entire-screen'
-        ) as HTMLElement;
-        entireScreenSpan.style.fontWeight = 'bold';
-        entireScreenSpan.style.color = 'red';
+      // Check if the user selected the entire screen
+      const videoTrack = this.screenCaptureStream.getVideoTracks()[0];
+      if (videoTrack.getSettings().displaySurface !== 'monitor') {
+        this.screenCaptureStream.getTracks().forEach((track) => track.stop());
+        throw new Error('Please select the entire screen for recording.');
       }
-    });
+
+      // MediaStream Recording API
+      this.screenCaptureRecorder = new MediaRecorder(this.screenCaptureStream);
+      this.screenCaptureRecorder.start();
+
+      const [video] = this.screenCaptureStream.getVideoTracks();
+
+      this.screenCaptureRecorder.addEventListener('dataavailable', (evt) => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(evt.data);
+        a.download = 'screen_capture.mp4';
+        a.click();
+      });
+
+      captureButton.hidden = true;
+      toFullscreenButton.disabled = false;
+    } catch (err) {
+      console.error('Error starting screen recording:', err);
+      if (err instanceof Error && err.name === 'NotAllowedError') {
+        alert(
+          'Screen recording permission denied. Please try again and allow screen recording.'
+        );
+      } else {
+        alert('Please try again and ensure you select the "Entire Screen".');
+      }
+      const entireScreenSpan = document.getElementById(
+        'entire-screen'
+      ) as HTMLElement;
+      entireScreenSpan.style.fontWeight = 'bold';
+      entireScreenSpan.style.color = 'red';
+    }
   }
 
-  async detectFaces() {
+  private stopScreenRecording(): void {
+    if (
+      this.screenCaptureRecorder &&
+      this.screenCaptureRecorder.state !== 'inactive'
+    ) {
+      this.screenCaptureRecorder.stop();
+    }
+    this.screenCaptureStream?.getTracks().forEach((track) => track.stop());
+  }
+
+  private async detectFaces() {
     this.elRef.nativeElement
       .querySelector('video')
       .addEventListener('play', async () => {
@@ -513,9 +543,11 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
           );
 
           // Always call interpolateAgePredictions and store the results
-          const interpolatedAges = this.resizedDetections.map((detection: any) => {
-            return this.interpolateAgePredictions(detection.age);
-          });
+          const interpolatedAges = this.resizedDetections.map(
+            (detection: any) => {
+              return this.interpolateAgePredictions(detection.age);
+            }
+          );
 
           this.canvas
             .getContext('2d')
@@ -523,7 +555,10 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
 
           if (this.isInDevMode) {
             faceapi.draw.drawDetections(this.canvas, this.resizedDetections);
-            faceapi.draw.drawFaceExpressions(this.canvas, this.resizedDetections);
+            faceapi.draw.drawFaceExpressions(
+              this.canvas,
+              this.resizedDetections
+            );
 
             this.resizedDetections.forEach((detection: any, index: number) => {
               const { age, gender, genderProbability } = detection;
