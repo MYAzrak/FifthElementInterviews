@@ -80,9 +80,3 @@ The stats component (`StatsComponent`) provides:
 - Post-interview analysis of collected data
 - Charts for visualizing expression, age, gender, and face detection data
 - Summary of the candidate's performance
-
-## Planned Improvements
-
-1. Implement a check to ensure the candidate chooses 'Entire Screen' for screen recording.
-2. Create a step-by-step guide for screen recording and transitioning to fullscreen mode.
-3. Add a pre-interview check for proper functioning of the candidate's microphone and camera, including visual mic levels.
