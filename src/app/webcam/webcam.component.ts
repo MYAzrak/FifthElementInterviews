@@ -477,7 +477,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
         a.click();
       });
 
-      captureButton.hidden = true;
+      captureButton.style.display = 'none';
       toFullscreenButton.disabled = false;
     } catch (err) {
       console.error('Error starting screen recording:', err);

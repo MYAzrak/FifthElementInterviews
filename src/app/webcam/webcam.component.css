@@ -125,16 +125,31 @@ h1 {
 #capture {
   position: fixed;
   right: 10%;
-  width: 35px;
-  height: 35px;
-  background-color: red;
+  margin: 10px;
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 20px;
   border: 1px solid black;
-  border-radius: 50%;
+  border-radius: 5px;
+  background-color: #333;
+  color: white;
   cursor: pointer;
   transition: background-color 0.3s;
 }
 
-#capture:hover,
+#capture:hover {
+  background-color: #555;
+}
+
+#indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #cc0000;
+  margin-right: 10px;
+  transition: background-color 0.3s;
+}
+
 #fullscreen:hover {
   background-color: darkred;
 }
