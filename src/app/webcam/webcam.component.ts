@@ -75,6 +75,8 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   // For screen recording
   private screenCaptureRecorder: MediaRecorder | null = null;
   private screenCaptureStream: MediaStream | null = null;
+  private isInterviewCompleted: boolean = false;
+  private isInsideInterview: boolean = false;
 
   constructor(
     private elRef: ElementRef,
@@ -106,7 +108,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Stops mainTimer, subTimer, and all intervals returned by setInterval before routing to /stats
-  private cleanupTimers() {
+  private cleanupTimers(): void {
     clearInterval(this.detectionInterval);
     clearInterval(this.avgNumOfFacesInterval);
     clearInterval(this.avgAgeGenderInterval);
@@ -136,6 +138,8 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   // Called when the mainTimer ends
   private handleInterviewEnd(): void {
     this.mainTimerDisplay = 'Directing to Statistics';
+    this.isInterviewCompleted = true;
+    this.isInsideInterview = false;
     this.stopScreenRecording(); // Stop recording before routing to /stats
     this.saveData();
     this.cleanupTimers();
@@ -183,12 +187,13 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   // Called when the user exits fullscreen for more than 10s during the interview
   private handleDisqualification(): void {
     this.isDisqualified = true;
-    console.log("You've been disqualified for cheating.");
     const failData = {
       isDisqualified: this.isDisqualified,
     };
     localStorage.setItem('failData', JSON.stringify(failData));
     this.cleanupTimers();
+    this.isInterviewCompleted = true;
+    this.isInsideInterview = false;
     this.stopScreenRecording();
     this.router.navigate(['/stats']);
   }
@@ -199,7 +204,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Removes the fullscreen change listener before routing to /stats
-  private removeFullscreenListener() {
+  private removeFullscreenListener(): void {
     document.removeEventListener(
       'fullscreenchange',
       this.handleFullScreenChange
@@ -209,6 +214,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   // Called when the button id="begin" is pressed
   public beginInterview(): void {
     localStorage.clear();
+    this.isInsideInterview = true;
     this.showWebcam = true;
     document.documentElement.requestFullscreen();
     this.cdRef.detectChanges(); // Force change detection
@@ -244,7 +250,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Handles the completion event from the device-check component, determining whether the devices (mic and camera) are working properly
-  public onDeviceCheckComplete(isReady: boolean) {
+  public onDeviceCheckComplete(isReady: boolean): void {
     this.devicesReady = isReady;
   }
 
@@ -436,20 +442,6 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Called when the button id="capture" is pressed for screen recording
   public async screenRecord(): Promise<void> {
-    let toFullscreenButton = document.getElementById(
-      'to-fullscreen'
-    ) as HTMLButtonElement;
-    if (!toFullscreenButton) {
-      console.error('Next button element not found');
-      return;
-    }
-
-    let captureButton = document.getElementById('capture') as HTMLButtonElement;
-    if (!captureButton) {
-      console.error('Capture button element not found');
-      return;
-    }
-
     try {
       // Screen Capture API
       this.screenCaptureStream = await navigator.mediaDevices.getDisplayMedia({
@@ -477,25 +469,79 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
         a.click();
       });
 
-      captureButton.style.display = 'none';
-      toFullscreenButton.disabled = false;
+      this.screenCaptureRecorder.addEventListener('stop', () => {
+        // Candidate stopped recording before entering the interview
+        if (!this.isInterviewCompleted && !this.isInsideInterview) {
+          alert(
+            'Please do not stop the screen recording before finishing the interview.'
+          );
+          this.showModal = 'screenRecord';
+          this.changeCaptureButtons(true);
+        }
+
+        // Candidate stopped recording during the interview
+        if (!this.isInterviewCompleted && this.isInsideInterview) {
+          this.screenRecord();
+        }
+      });
+
+      this.changeCaptureButtons(false);
     } catch (err) {
       console.error('Error starting screen recording:', err);
       if (err instanceof Error && err.name === 'NotAllowedError') {
         alert(
           'Screen recording permission denied. Please try again and allow screen recording.'
         );
+        if (!this.isInterviewCompleted && this.isInsideInterview) {
+          this.screenRecord();
+        }
       } else {
         alert('Please try again and ensure you select the "Entire Screen".');
+        if (!this.isInterviewCompleted && this.isInsideInterview) {
+          this.screenRecord();
+        }
       }
-      const entireScreenSpan = document.getElementById(
-        'entire-screen'
-      ) as HTMLElement;
+      this.highlightText();
+    }
+  }
+
+  // Enables or disables the captureButton and toFullscreenButton for screen recording
+  private changeCaptureButtons(enableButtons: boolean): void {
+    let toFullscreenButton = document.getElementById(
+      'to-fullscreen'
+    ) as HTMLButtonElement;
+    if (!toFullscreenButton) {
+      console.error('Next button element not found');
+      return;
+    }
+
+    let captureButton = document.getElementById('capture') as HTMLButtonElement;
+    if (!captureButton) {
+      console.error('Capture button element not found');
+      return;
+    }
+
+    if (enableButtons) {
+      captureButton.style.display = 'inline-flex';
+      toFullscreenButton.disabled = true;
+    } else {
+      captureButton.style.display = 'none';
+      toFullscreenButton.disabled = false;
+    }
+  }
+
+  // Highlights "Entire Screen" when the user choose another option
+  private highlightText(): void {
+    const entireScreenSpan = document.getElementById(
+      'entire-screen'
+    ) as HTMLElement;
+    if (entireScreenSpan) {
       entireScreenSpan.style.fontWeight = 'bold';
       entireScreenSpan.style.color = 'red';
     }
   }
 
+  // Stops the screen recording in case of disqualification or interview end
   private stopScreenRecording(): void {
     if (
       this.screenCaptureRecorder &&
@@ -506,7 +552,8 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     this.screenCaptureStream?.getTracks().forEach((track) => track.stop());
   }
 
-  private async detectFaces() {
+  // Contains the faceapi logic for extracting the information from the candidate's face
+  private async detectFaces(): Promise<void> {
     this.elRef.nativeElement
       .querySelector('video')
       .addEventListener('play', async () => {
