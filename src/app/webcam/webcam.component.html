@@ -18,11 +18,11 @@
         in the frame.</p>
       <p>2. You need to do this on a PC/laptop, not on your phone.</p>
       <p>3- Your interview will be recorded and saved for 3 months.</p>
-      <p>4- Your screen will also be recorded during the interview (click the button bottom right and choose
+      <p>4- Your screen will also be recorded during the interview (click 'Start recording' and choose
         <span id="entire-screen">'Entire Screen'</span>).
       </p>
       <div class="buttons">
-        <button class="next-modal" id="to-fullscreen" (click)="showModal = 'fullscreen'" disabled>Next</button>
+        <button class="next-modal" id="to-fullscreen" (click)="showModal = 'fullscreen'" hidden>Next</button>
         <button id="capture" (click)="screenRecord()">
           <div id="indicator"></div>
           <span id="buttonText">Start recording</span>

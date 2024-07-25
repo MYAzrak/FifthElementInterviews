@@ -123,15 +123,13 @@ h1 {
 }
 
 #capture {
-  position: fixed;
-  right: 10%;
-  margin: 10px;
   display: inline-flex;
   align-items: center;
   padding: 10px 20px;
   border: 1px solid black;
   border-radius: 5px;
   background-color: #333;
+  font-size: 1.5em;
   color: white;
   cursor: pointer;
   transition: background-color 0.3s;

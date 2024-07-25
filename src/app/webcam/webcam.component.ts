@@ -523,10 +523,10 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (enableButtons) {
       captureButton.style.display = 'inline-flex';
-      toFullscreenButton.disabled = true;
+      toFullscreenButton.hidden = true;
     } else {
       captureButton.style.display = 'none';
-      toFullscreenButton.disabled = false;
+      toFullscreenButton.hidden = false;
     }
   }
 
