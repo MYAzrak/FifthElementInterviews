@@ -458,6 +458,15 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
         throw new Error('Please select the entire screen for recording.');
       }
 
+      // Check if the user allowed audio
+      const audioTracks = this.screenCaptureStream.getAudioTracks();
+      if (audioTracks.length === 0) {
+        this.screenCaptureStream.getTracks().forEach((track) => track.stop());
+        throw new Error(
+          'Please enable system audio sharing for the recording.'
+        );
+      }
+
       // MediaStream Recording API
       this.screenCaptureRecorder = new MediaRecorder(this.screenCaptureStream);
       this.screenCaptureRecorder.start();
@@ -496,7 +505,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
           this.screenRecord();
         }
       } else {
-        alert('Please try again and ensure you select the "Entire Screen".');
+        alert('Please try again and ensure you select the "Entire Screen" and allow sharing of system audio.');
         if (!this.isInterviewCompleted && this.isInsideInterview) {
           this.screenRecord();
         }
