@@ -12,27 +12,26 @@ import { Router } from '@angular/router';
   styleUrl: './stats.component.css',
 })
 export class StatsComponent implements OnInit, AfterViewInit {
-  selectedChart: string = 'expressions';
-  chartOptions: { value: string; label: string }[] = [
+  // For chart.js
+  public selectedChart: string = 'expressions';
+  public chartOptions: { value: string; label: string }[] = [
     { value: 'expressions', label: 'Average Expressions' },
     { value: 'age', label: 'Average Age' },
     { value: 'gender', label: 'Gender Distribution' },
     { value: 'facesDetected', label: 'Number of Faces Detected' },
     { value: 'faceCover', label: 'Face Coverage' },
   ];
-
-  avgExpressions: string[] = [];
-  avgAges: number[] = [];
-  avgGenders: number[] = [];
-  avgNumOfFacesDetected: number[] = [];
-  faceCoverSecondsCount: number = 0;
-  isDisqualified: boolean = false;
-
   private charts: { [key: string]: Chart } = {};
 
-  restartProcess() {
-    this.router.navigate(['']);
-  }
+  // Data collected in webcam component
+  private avgExpressions: string[] = [];
+  private avgAges: number[] = [];
+  private avgGenders: number[] = [];
+  private avgNumOfFacesDetected: number[] = [];
+  private faceCoverSecondsCount: number = 0;
+  private isDisqualified: boolean = false;
+
+  public finalResultsPara: string = '';
 
   constructor(private router: Router) {}
 
@@ -43,30 +42,36 @@ export class StatsComponent implements OnInit, AfterViewInit {
       this.isDisqualified = parsedData.isDisqualified;
     }
     if (this.isDisqualified) {
-      this.printResults(this.isDisqualified);
+      this.showResults(this.isDisqualified);
+    } else {
+      const data = localStorage.getItem('webcamData');
+      if (data) {
+        const parsedData = JSON.parse(data);
+        this.avgExpressions = parsedData.avgExpressions;
+        this.avgAges = parsedData.avgAges;
+        this.avgGenders = parsedData.avgGenders;
+        this.avgNumOfFacesDetected = parsedData.avgNumOfFacesDetected;
+        this.faceCoverSecondsCount = parsedData.faceCoverSecondsCount;
+      }
+      this.showResults(this.isDisqualified);
     }
-
-    const data = localStorage.getItem('webcamData');
-    if (data) {
-      const parsedData = JSON.parse(data);
-      this.avgExpressions = parsedData.avgExpressions;
-      this.avgAges = parsedData.avgAges;
-      this.avgGenders = parsedData.avgGenders;
-      this.avgNumOfFacesDetected = parsedData.avgNumOfFacesDetected;
-      this.faceCoverSecondsCount = parsedData.faceCoverSecondsCount;
-    }
-    this.printResults(this.isDisqualified);
   }
 
   ngAfterViewInit(): void {
-    if (document.exitFullscreen) {
+    if (document.fullscreenElement) {
       document.exitFullscreen();
     }
     this.createCharts();
     this.showSelectedChart();
   }
 
-  createCharts() {
+  // Goes back to the home page when the restart is pressed
+  public restartProcess(): void {
+    this.router.navigate(['']);
+  }
+
+  // Creates the charts after initializing the view
+  private createCharts(): void {
     this.charts['expressions'] = this.createExpressionChart();
     this.charts['age'] = this.createAgeChart();
     this.charts['gender'] = this.createGenderChart();
@@ -74,7 +79,8 @@ export class StatsComponent implements OnInit, AfterViewInit {
     this.charts['faceCover'] = this.createFaceCoverChart();
   }
 
-  showSelectedChart() {
+  // Called when changing the selected chart option
+  public showSelectedChart(): void {
     Object.keys(this.charts).forEach((key) => {
       const chartCanvas = document.getElementById(
         `${key}Chart`
@@ -86,11 +92,8 @@ export class StatsComponent implements OnInit, AfterViewInit {
     });
   }
 
-  onChartSelectionChange() {
-    this.showSelectedChart();
-  }
-
-  getCandidateGender(): string {
+  // Determines the candidate's gender
+  private getCandidateGender(): string {
     if (this.avgGenders.length === 0) return `Gender data not available.`;
     const sumGenders: number = this.avgGenders.reduce(
       (acc, curr) => acc + curr
@@ -100,7 +103,8 @@ export class StatsComponent implements OnInit, AfterViewInit {
     return `The candidate is a ${candidateGender}.`;
   }
 
-  getCandidateAge(): string {
+  // Determines the candidate's age
+  private getCandidateAge(): string {
     const filteredAges: number[] = this.avgAges.filter((age) => age !== 0);
     if (filteredAges.length === 0) return `Age data not available.`;
     const sumAges: number = filteredAges.reduce((acc, curr) => acc + curr);
@@ -108,7 +112,8 @@ export class StatsComponent implements OnInit, AfterViewInit {
     return `They are ${candidateAge.toFixed(1)} years old.`;
   }
 
-  getNumOfFacesDetected(): number {
+  // Determines the number of faces detected
+  private getNumOfFacesDetected(): number {
     const filteredFaces: number[] = this.avgNumOfFacesDetected.filter(
       (age) => age !== 0
     );
@@ -117,7 +122,8 @@ export class StatsComponent implements OnInit, AfterViewInit {
     return Math.ceil(sumFaces / filteredFaces.length);
   }
 
-  getCandidateExpression(): string {
+  // Determines the candidate's overall expression
+  private getCandidateExpression(): string {
     const expressionsCount: { [key: string]: number } = {
       neutral: 0,
       happy: 0,
@@ -140,16 +146,18 @@ export class StatsComponent implements OnInit, AfterViewInit {
     return `Their overall expression during the interview was ${overallExpression}.`;
   }
 
-  printResults(isDisqualified: boolean): void {
-    const resultsPara: HTMLElement | null = document.getElementById(`result`);
+  // Shows a summary of the candidate's performance during the interview
+  private showResults(isDisqualified: boolean): void {
+    const resultsPara = document.getElementById(
+      `result`
+    ) as HTMLParagraphElement;
     let summary: string[] = [];
     if (isDisqualified) {
-      summary.push(`Disqualified for cheating.`);
+      this.finalResultsPara = 'Disqualified for cheating.';
       if (resultsPara) {
         resultsPara.style.fontSize = '50px';
         resultsPara.style.color = 'red';
         resultsPara.style.fontWeight = 'bold';
-        resultsPara.textContent = summary.join(' ');
       }
       return;
     }
@@ -178,12 +186,10 @@ export class StatsComponent implements OnInit, AfterViewInit {
 
     summary.push(this.getCandidateExpression());
 
-    if (resultsPara) {
-      resultsPara.textContent = summary.join(' ');
-    }
+    this.finalResultsPara = summary.join(' ');
   }
 
-  createExpressionChart(): Chart {
+  private createExpressionChart(): Chart {
     const ctx = document.getElementById(
       'expressionsChart'
     ) as HTMLCanvasElement;
@@ -257,7 +263,7 @@ export class StatsComponent implements OnInit, AfterViewInit {
     });
   }
 
-  createAgeChart(): Chart {
+  private createAgeChart(): Chart {
     const ctx = document.getElementById('ageChart') as HTMLCanvasElement;
     return new Chart(ctx, {
       type: 'line' as ChartType,
@@ -293,7 +299,7 @@ export class StatsComponent implements OnInit, AfterViewInit {
     });
   }
 
-  createGenderChart(): Chart {
+  private createGenderChart(): Chart {
     const ctx = document.getElementById('genderChart') as HTMLCanvasElement;
     return new Chart(ctx, {
       type: 'line' as ChartType,
@@ -329,7 +335,7 @@ export class StatsComponent implements OnInit, AfterViewInit {
     });
   }
 
-  createFacesDetectedChart(): Chart {
+  private createFacesDetectedChart(): Chart {
     const ctx = document.getElementById(
       'facesDetectedChart'
     ) as HTMLCanvasElement;
@@ -367,7 +373,7 @@ export class StatsComponent implements OnInit, AfterViewInit {
     });
   }
 
-  createFaceCoverChart(): Chart {
+  private createFaceCoverChart(): Chart {
     const ctx = document.getElementById('faceCoverChart') as HTMLCanvasElement;
     return new Chart(ctx, {
       type: 'bar' as ChartType,

@@ -1,5 +1,5 @@
 <div class="results-container">
-  <p id="result"></p>
+  <p id="result">{{ finalResultsPara }}</p>
   <div class="buttons">
     <button (click)="restartProcess()" id="restart">Restart Process</button>
     <a id="feedback-form" href="https://forms.gle/gvb13e8SkyAWuSav7" target="_blank">Give us Feedback!</a>
@@ -9,7 +9,7 @@
 <div class="chart-container">
   <div class="chart-selection">
     <label for="chartSelect">Select Chart:</label>
-    <select id="chartSelect" [(ngModel)]="selectedChart" (change)="onChartSelectionChange()">
+    <select id="chartSelect" [(ngModel)]="selectedChart" (change)="showSelectedChart()">
       <option *ngFor="let option of chartOptions" [value]="option.value">
         {{ option.label }}
       </option>
