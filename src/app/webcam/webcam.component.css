@@ -1,22 +1,10 @@
-.app-root,
-body {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-}
-
 .welcome-container {
   text-align: center;
-  padding: 20px;
-  border-radius: 10px;
 }
 
 h1 {
   font-size: 3em;
   color: rgb(0, 51, 122);
-  margin: 20px 0;
 }
 
 #start {
@@ -35,10 +23,8 @@ h1 {
 }
 
 .video-container {
-  position: relative;
   width: 1285px;
   height: 800px;
-  overflow: hidden;
   background-color: #f4f4f4;
   border-radius: 20px;
   box-shadow: 0 4px 12px rgba(0, 51, 122, 0.3), 0 8px 24px rgba(0, 51, 122, 0.2);
@@ -55,7 +41,6 @@ h1 {
   /* width & height as in .video-container video */
   width: 1280px;
   height: 720px;
-
   position: absolute;
   top: 50%;
   left: 50%;
@@ -64,17 +49,15 @@ h1 {
 
 #interview-timer {
   position: absolute;
-  bottom: 1px;
+  padding: 10px 20px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 48px;
-  color: white;
   font-family: 'Times New Roman', serif;
-  z-index: 3;
+  font-size: 48px;
   background-color: rgba(0, 0, 0, 0.5);
-  padding: 10px 20px;
-  border-radius: 10px;
+  color: white;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
 }
 
 .modal {
@@ -114,8 +97,7 @@ h1 {
 }
 
 .modal-content p {
-  margin: 20px 0;
-  font-size: 22px;
+  font-size: 1.5em;
 }
 
 .modal-content b {
@@ -148,10 +130,6 @@ h1 {
   transition: background-color 0.3s;
 }
 
-#fullscreen:hover {
-  background-color: darkred;
-}
-
 .next-modal,
 #begin,
 #fullscreen {
@@ -169,6 +147,10 @@ h1 {
   background-color: red;
 }
 
+#fullscreen:hover {
+  background-color: darkred;
+}
+
 .next-modal:hover,
 #begin:hover {
   background-color: rgb(51, 153, 255);
@@ -180,8 +162,4 @@ h1 {
   background-color: #cccccc;
   color: #666666;
   cursor: default;
-}
-
-.device-check-modal {
-  display: inline;
 }

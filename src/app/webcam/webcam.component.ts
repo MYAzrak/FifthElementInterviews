@@ -54,7 +54,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly AVG_EXPRESSION_INTERVAL = 5000; // Make it 1 minute === 60000 milliseconds
   private readonly AVG_AGE_GENDER_INTERVAL = 5000; // Make it 10 seconds === 10000 milliseconds
   private readonly AVG_NUM_OF_FACES_INTERVAL = 5000; // 5 seconds
-  private readonly MAIN_TIMER_DURATION = 30; // Make it 300 === 5 minutes in seconds
+  private readonly MAIN_TIMER_DURATION = 100; // Make it 300 === 5 minutes in seconds
   private readonly SUB_TIMER_DURATION = 10; // 10 seconds
   public readonly WIDTH = 1280;
   public readonly HEIGHT = 720;
@@ -70,7 +70,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   public showModal: string = 'deviceCheck'; // or screenRecord or fullscreen;
   public devicesReady: boolean = false;
 
-  private isInDevMode: boolean = false; // Assign true to show the canvas (faceapi squares) around the face
+  private isInDevMode: boolean = true; // Assign true to show the canvas (faceapi squares) around the face
 
   // For screen recording
   private screenCaptureRecorder: MediaRecorder | null = null;
