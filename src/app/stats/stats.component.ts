@@ -141,15 +141,15 @@ export class StatsComponent implements OnInit, AfterViewInit {
   }
 
   printResults(isDisqualified: boolean): void {
-    const textElement: HTMLElement | null = document.getElementById(`text`);
+    const resultsPara: HTMLElement | null = document.getElementById(`result`);
     let summary: string[] = [];
     if (isDisqualified) {
       summary.push(`Disqualified for cheating.`);
-      if (textElement) {
-        textElement.style.fontSize = '50px';
-        textElement.style.color = 'red';
-        textElement.style.fontWeight = 'bold';
-        textElement.textContent = summary.join(' ');
+      if (resultsPara) {
+        resultsPara.style.fontSize = '50px';
+        resultsPara.style.color = 'red';
+        resultsPara.style.fontWeight = 'bold';
+        resultsPara.textContent = summary.join(' ');
       }
       return;
     }
@@ -178,8 +178,8 @@ export class StatsComponent implements OnInit, AfterViewInit {
 
     summary.push(this.getCandidateExpression());
 
-    if (textElement) {
-      textElement.textContent = summary.join(' ');
+    if (resultsPara) {
+      resultsPara.textContent = summary.join(' ');
     }
   }
 

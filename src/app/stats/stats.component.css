@@ -1,6 +1,5 @@
 .results-container {
   max-width: 1200px;
-  margin: 0 auto;
   padding: 20px;
   background-color: #f4f4f4;
   border-radius: 10px;
@@ -8,26 +7,17 @@
   margin-bottom: 20px;
 }
 
-#text {
+#result {
   padding: 20px;
   font-size: 22px;
-  margin: 20px 0;
   color: #333;
   background-color: #ffffff;
   border-radius: 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  white-space: normal;
-  width: calc(100% - 40px);
-  max-height: none;
-  overflow-y: visible;
   line-height: 1.5;
 }
 
 .chart-container {
-  max-width: 1200px;
-  margin: 0 auto;
   padding: 20px;
   background-color: #f4f4f4;
   border-radius: 10px;
@@ -39,15 +29,8 @@
   text-align: center;
 }
 
-.chart-display {
-  display: inline;
-  justify-content: center;
-  text-align: center;
-}
-
 .chart-display canvas {
   display: flex;
-  justify-content: center;
   max-width: 100%;
 }
 
