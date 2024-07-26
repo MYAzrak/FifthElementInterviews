@@ -80,3 +80,10 @@ The stats component (`StatsComponent`) provides:
 - Post-interview analysis of collected data
 - Charts for visualizing expression, age, gender, and face detection data
 - Summary of the candidate's performance
+
+### Device Check Component
+
+The device-check  component (`DeviceCheckComponent`) ensures the functionality of key candidate devices:
+
+- Webcam Functionality: Verifies that the webcam is working and utilizes [face-api.js](https://github.com/justadudewhohacks/face-api.js) to make sure that candidate's face is visible
+- Microphone Functionality: Checks that the microphone is operational
