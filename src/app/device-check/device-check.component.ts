@@ -9,7 +9,7 @@ import {
   EventEmitter,
   Output,
 } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import * as faceapi from 'face-api.js';
 
 @Component({
@@ -29,14 +29,14 @@ export class DeviceCheckComponent implements OnInit, OnDestroy {
   private analyser: AnalyserNode | null = null;
   private dataArray: Uint8Array | null = null;
   private animationFrameId: number | null = null;
-  private faceDetectionInterval: any;
+  private faceDetectionInterval!: NodeJS.Timeout;
 
-  audioLevel: number = 0;
+  public audioLevel: number = 0;
   private isVoiceDetected: boolean = false;
   private isFaceDetected: boolean = false;
   public startedChecking: boolean = false;
 
-  constructor(private ngZone: NgZone, private router: Router) {}
+  constructor(private ngZone: NgZone) {}
 
   async ngOnInit() {
     await this.loadFaceDetectionModels();
@@ -46,7 +46,7 @@ export class DeviceCheckComponent implements OnInit, OnDestroy {
     this.stopDeviceCheck();
   }
 
-  async loadFaceDetectionModels() {
+  private async loadFaceDetectionModels(): Promise<void> {
     try {
       await faceapi.nets.tinyFaceDetector.loadFromUri('/assets/models');
     } catch (error) {
@@ -54,7 +54,7 @@ export class DeviceCheckComponent implements OnInit, OnDestroy {
     }
   }
 
-  async startDeviceCheck() {
+  public async startDeviceCheck(): Promise<void> {
     this.startedChecking = true;
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
@@ -86,7 +86,7 @@ export class DeviceCheckComponent implements OnInit, OnDestroy {
     }
   }
 
-  startFaceDetection() {
+  private startFaceDetection(): void {
     const videoElement = this.videoElement.nativeElement;
     this.faceDetectionInterval = setInterval(async () => {
       const detections = await faceapi.detectAllFaces(
@@ -98,17 +98,17 @@ export class DeviceCheckComponent implements OnInit, OnDestroy {
     }, 1000); // Check every second
   }
 
-  checkDevicesReady() {
+  private checkDevicesReady(): void {
     if (this.isVoiceDetected && this.isFaceDetected) {
       this.devicesReady();
     }
   }
 
-  devicesReady() {
+  private devicesReady(): void {
     this.deviceCheckComplete.emit(true);
   }
 
-  stopDeviceCheck() {
+  private stopDeviceCheck(): void {
     if (this.stream) {
       this.stream.getTracks().forEach((track) => track.stop());
     }
@@ -123,7 +123,7 @@ export class DeviceCheckComponent implements OnInit, OnDestroy {
     }
   }
 
-  updateAudioLevel() {
+  private updateAudioLevel(): void {
     this.ngZone.runOutsideAngular(() => {
       if (this.analyser && this.dataArray) {
         this.analyser.getByteFrequencyData(this.dataArray);
