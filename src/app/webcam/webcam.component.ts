@@ -228,7 +228,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
       modalName === 'begin' ? 'beginModal' : 'warningModal'
     );
     if (modal) {
-      modal.style.display = 'block';
+      modal.style.display = 'flex';
     } else {
       console.error('Modal element not found');
     }
