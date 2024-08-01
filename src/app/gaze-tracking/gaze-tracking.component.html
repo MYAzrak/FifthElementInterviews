@@ -1,1 +1,7 @@
-<p>gaze-tracking works!</p>
+<button (click)="startCalibration()">Start Calibration</button>
+
+<div #calibrationContainer id="calibration-container" style="display: none;">
+  <button *ngFor="let pos of calibrationPositions" class="calibration-button" [style.left]="pos.left"
+    [style.top]="pos.top" [style.right]="pos.right" [style.bottom]="pos.bottom" [style.transform]="pos.transform"
+    (click)="onCalibrationButtonClick($event)"></button>
+</div>

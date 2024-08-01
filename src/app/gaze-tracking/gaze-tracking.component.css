@@ -1,0 +1,24 @@
+#calibration-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+}
+
+.calibration-button {
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background-color: red;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.calibration-button.completed {
+  background-color: #28a745;
+  cursor: default;
+}
