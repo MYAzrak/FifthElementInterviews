@@ -6,7 +6,7 @@ export const routes: Routes = [
   {
     path: '',
     component: WebcamComponent,
-    title: `FaceAPI-Angular`,
+    title: `The Fifth Element Interviews`,
   },
   {
     path: 'stats',
