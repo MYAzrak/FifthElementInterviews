@@ -5,6 +5,10 @@
 
 <div *ngIf="!showWebcam" id="beginModal" class="modal">
   <div class="modal-content">
+    @if (showModal === "calibration") {
+    <app-gaze-tracking></app-gaze-tracking>
+    <button class="next-modal" id="to-device-check" (click)="showModal = 'deviceCheck'">Next</button>
+    }
     @if (showModal === "deviceCheck") {
     <div class="device-check-modal">
       <app-device-check (deviceCheckComplete)="onDeviceCheckComplete($event)"></app-device-check>

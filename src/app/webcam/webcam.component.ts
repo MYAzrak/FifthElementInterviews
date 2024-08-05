@@ -12,11 +12,12 @@ import { Router, RouterModule } from '@angular/router';
 import * as faceapi from 'face-api.js';
 import * as math from 'mathjs';
 import { DeviceCheckComponent } from '../device-check/device-check.component';
+import { GazeTrackingComponent } from '../gaze-tracking/gaze-tracking.component';
 
 @Component({
   selector: 'app-webcam',
   standalone: true,
-  imports: [CommonModule, RouterModule, DeviceCheckComponent],
+  imports: [CommonModule, RouterModule, DeviceCheckComponent, GazeTrackingComponent],
   templateUrl: './webcam.component.html',
   styleUrl: './webcam.component.css',
 })
@@ -67,7 +68,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   private displaySize: any;
   private videoInput: any;
 
-  public showModal: string = 'deviceCheck'; // or screenRecord or fullscreen;
+  public showModal: string = 'calibration'; // or deviceCheck or screenRecord or fullscreen;
   public devicesReady: boolean = false;
 
   private isInDevMode: boolean = true; // Assign true to show the canvas (faceapi squares) around the face

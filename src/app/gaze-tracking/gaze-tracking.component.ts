@@ -25,16 +25,16 @@ export class GazeTrackingComponent implements OnInit, AfterViewInit {
   // For calibration
   @ViewChild('calibrationContainer') calibrationContainer!: ElementRef;
   public calibrationPositions = [
-    { left: '50px', top: '50px' },
-    { right: '50px', top: '50px' },
-    { left: '50px', bottom: '50px' },
-    { right: '50px', bottom: '50px' },
-    { left: '50%', top: '50px', transform: 'translateX(-50%)' },
-    { left: '50%', bottom: '50px', transform: 'translateX(-50%)' },
-    { left: '50px', top: '50%', transform: 'translateY(-50%)' },
-    { right: '50px', top: '50%', transform: 'translateY(-50%)' },
-    { left: '25%', top: '25%', transform: 'translate(-50%, -50%)' },
-    { left: '75%', top: '75%', transform: 'translate(-50%, -50%)' },
+    { left: '50px', top: '50px', right: '50px', transform: 'translateX(-50%)', bottom: '50px' },
+    // { right: '50px', top: '50px' },
+    // { left: '50px', bottom: '50px' },
+    // { right: '50px', bottom: '50px' },
+    // { left: '50%', top: '50px', transform: 'translateX(-50%)' },
+    // { left: '50%', bottom: '50px', transform: 'translateX(-50%)' },
+    // { left: '50px', top: '50%', transform: 'translateY(-50%)' },
+    // { right: '50px', top: '50%', transform: 'translateY(-50%)' },
+    // { left: '25%', top: '25%', transform: 'translate(-50%, -50%)' },
+    // { left: '75%', top: '75%', transform: 'translate(-50%, -50%)' },
   ];
   private completedButtons: number = 0;
 
