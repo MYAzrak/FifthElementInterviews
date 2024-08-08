@@ -86,7 +86,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   ) {}
 
   // Loading the models
-  async ngOnInit(): Promise<void> {
+  ngOnInit(): void {
     this.loadFaceAPIModels();
     this.subscribeToTimerDisplays();
   }
@@ -115,6 +115,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  // Syncs between the mainTimerDisplay and subTimerDisplay in timer service and webcam component
   private subscribeToTimerDisplays(): void {
     this.subscriptions.push(
       this.timerService.mainTimerDisplay$.subscribe((display) => {
