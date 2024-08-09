@@ -65,7 +65,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   public showModal: string = 'deviceCheck'; // or screenRecord or fullscreen;
   public devicesReady: boolean = false;
 
-  private isInDevMode: boolean = true; // Assign true to show the canvas (faceapi squares) around the face
+  private isInDevMode: boolean = false; // Assign true to show the canvas (faceapi squares) around the face
 
   // For screen recording
   private screenCaptureRecorder: MediaRecorder | null = null;
@@ -106,7 +106,6 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       await Promise.all([
         faceapi.nets.ssdMobilenetv1.loadFromUri('/assets/models'),
-        faceapi.nets.tinyFaceDetector.loadFromUri('/assets/models'),
         faceapi.nets.faceExpressionNet.loadFromUri('/assets/models'),
         faceapi.nets.ageGenderNet.loadFromUri('/assets/models'),
       ]);
@@ -563,7 +562,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
           this.detection = await faceapi
             .detectAllFaces(
               this.videoInput,
-              new faceapi.SsdMobilenetv1Options() // or faceapi.TinyFaceDetectorOptions
+              new faceapi.SsdMobilenetv1Options()
             )
             .withFaceExpressions()
             .withAgeAndGender();
