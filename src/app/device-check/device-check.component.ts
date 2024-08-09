@@ -38,20 +38,10 @@ export class DeviceCheckComponent implements OnInit, OnDestroy {
 
   constructor(private ngZone: NgZone) {}
 
-  async ngOnInit() {
-    await this.loadFaceDetectionModels();
-  }
+  ngOnInit() {}
 
   ngOnDestroy() {
     this.stopDeviceCheck();
-  }
-
-  private async loadFaceDetectionModels(): Promise<void> {
-    try {
-      await faceapi.nets.tinyFaceDetector.loadFromUri('/assets/models');
-    } catch (error) {
-      console.error('Error loading face detection models:', error);
-    }
   }
 
   public async startDeviceCheck(): Promise<void> {
@@ -91,7 +81,7 @@ export class DeviceCheckComponent implements OnInit, OnDestroy {
     this.faceDetectionInterval = setInterval(async () => {
       const detections = await faceapi.detectAllFaces(
         videoElement,
-        new faceapi.TinyFaceDetectorOptions()
+        new faceapi.SsdMobilenetv1Options()
       );
       this.isFaceDetected = detections.length > 0;
       this.checkDevicesReady();

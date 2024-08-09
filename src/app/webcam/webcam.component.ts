@@ -12,7 +12,8 @@ import { Router, RouterModule } from '@angular/router';
 import * as faceapi from 'face-api.js';
 import * as math from 'mathjs';
 import { DeviceCheckComponent } from '../device-check/device-check.component';
-
+import { TimerService } from '../services/timer.service';
+import { Subscription } from 'rxjs/internal/Subscription';
 @Component({
   selector: 'app-webcam',
   standalone: true,
@@ -31,8 +32,6 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   private avgNumOfFacesInterval!: NodeJS.Timeout;
   private avgAgeGenderInterval!: NodeJS.Timeout;
   private avgExpressionInterval!: NodeJS.Timeout;
-  private mainTimerInterval!: NodeJS.Timeout;
-  private subTimerInterval!: NodeJS.Timeout;
 
   private highestExpressions: string[] = []; // Saves the highest expression every second for 1m (then resets)
   private avgExpressions: string[] = []; // Saves the average expression detected over 1-minute intervals
@@ -47,15 +46,11 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   private isDisqualified: boolean = false;
   public showWebcam: boolean = false;
   public isOutsideFullScreen: boolean = false;
-  public mainTimerDisplay: string = '';
-  public subTimerDisplay: string = '';
 
   private readonly DETECTION_INTERVAL = 1000; // 1 second
   private readonly AVG_EXPRESSION_INTERVAL = 5000; // Make it 1 minute === 60000 milliseconds
   private readonly AVG_AGE_GENDER_INTERVAL = 5000; // Make it 10 seconds === 10000 milliseconds
   private readonly AVG_NUM_OF_FACES_INTERVAL = 5000; // 5 seconds
-  private readonly MAIN_TIMER_DURATION = 30; // Make it 300 === 5 minutes in seconds
-  private readonly SUB_TIMER_DURATION = 10; // 10 seconds
   public readonly WIDTH = 1280;
   public readonly HEIGHT = 720;
 
@@ -70,7 +65,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   public showModal: string = 'deviceCheck'; // or screenRecord or fullscreen;
   public devicesReady: boolean = false;
 
-  private isInDevMode: boolean = true; // Assign true to show the canvas (faceapi squares) around the face
+  private isInDevMode: boolean = false; // Assign true to show the canvas (faceapi squares) around the face
 
   // For screen recording
   private screenCaptureRecorder: MediaRecorder | null = null;
@@ -78,18 +73,39 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   private isInterviewCompleted: boolean = false;
   private isInsideInterview: boolean = false;
 
+  // From timer service
+  public mainTimerDisplay: string = '00:00';
+  public subTimerDisplay: string = '00:00';
+  private subscriptions: Subscription[] = [];
+
   constructor(
     private elRef: ElementRef,
     private cdRef: ChangeDetectorRef,
-    private router: Router
+    private router: Router,
+    private timerService: TimerService
   ) {}
 
   // Loading the models
-  async ngOnInit(): Promise<void> {
+  ngOnInit(): void {
+    this.loadFaceAPIModels();
+    this.subscribeToTimerDisplays();
+  }
+
+  ngAfterViewInit(): void {
+    this.cdRef.detectChanges();
+  }
+
+  ngOnDestroy(): void {
+    this.cleanupIntervals();
+    this.removeFullscreenListener();
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
+  }
+
+  // Loads FaceAPI models on initialization
+  private async loadFaceAPIModels(): Promise<void> {
     try {
       await Promise.all([
         faceapi.nets.ssdMobilenetv1.loadFromUri('/assets/models'),
-        faceapi.nets.tinyFaceDetector.loadFromUri('/assets/models'),
         faceapi.nets.faceExpressionNet.loadFromUri('/assets/models'),
         faceapi.nets.ageGenderNet.loadFromUri('/assets/models'),
       ]);
@@ -98,51 +114,37 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  ngAfterViewInit(): void {
-    this.cdRef.detectChanges();
-  }
+  // Syncs between the mainTimerDisplay and subTimerDisplay in timer service and webcam component
+  private subscribeToTimerDisplays(): void {
+    this.subscriptions.push(
+      this.timerService.mainTimerDisplay$.subscribe((display) => {
+        this.mainTimerDisplay = display;
+      })
+    );
 
-  ngOnDestroy(): void {
-    this.cleanupTimers();
-    this.removeFullscreenListener();
+    this.subscriptions.push(
+      this.timerService.subTimerDisplay$.subscribe((display) => {
+        this.subTimerDisplay = display;
+      })
+    );
   }
 
   // Stops mainTimer, subTimer, and all intervals returned by setInterval before routing to /stats
-  private cleanupTimers(): void {
+  private cleanupIntervals(): void {
     clearInterval(this.detectionInterval);
     clearInterval(this.avgNumOfFacesInterval);
     clearInterval(this.avgAgeGenderInterval);
     clearInterval(this.avgExpressionInterval);
-    clearInterval(this.mainTimerInterval);
-    clearInterval(this.subTimerInterval);
-  }
-
-  // Starts the mainTimer (the timer for the whole interview)
-  private startMainTimer(): void {
-    let timeLeft: number = this.MAIN_TIMER_DURATION;
-    this.mainTimerInterval = setInterval(() => {
-      this.mainTimerDisplay = this.formatTime(timeLeft);
-      if (--timeLeft < 0) {
-        this.handleInterviewEnd();
-      }
-    }, 1000);
-  }
-
-  // Used to format both subTimer and mainTimer
-  private formatTime(seconds: number): string {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+    this.timerService.cleanupTimers();
   }
 
   // Called when the mainTimer ends
   private handleInterviewEnd(): void {
-    this.mainTimerDisplay = 'Directing to Statistics';
     this.isInterviewCompleted = true;
     this.isInsideInterview = false;
     this.stopScreenRecording(); // Stop recording before routing to /stats
     this.saveData();
-    this.cleanupTimers();
+    this.cleanupIntervals();
     setTimeout(() => {
       this.router.navigate(['/stats']);
     }, 2000);
@@ -153,36 +155,16 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!document.fullscreenElement && this.router.url !== '/stats') {
       this.isOutsideFullScreen = true;
       this.openModal('warning');
-      this.startSubTimer();
-    } else {
-      this.isOutsideFullScreen = false;
-      this.stopSubTimer();
-    }
-  };
-
-  // Called when the user exits fullscreen during the interview
-  private startSubTimer(): void {
-    let timeLeft: number = this.SUB_TIMER_DURATION;
-    this.stopSubTimer(); // Stops past subTimers
-
-    this.subTimerInterval = setInterval(() => {
-      if (!document.fullscreenElement) {
-        this.subTimerDisplay = this.formatTime(timeLeft);
-        if (--timeLeft < 0) {
-          this.stopSubTimer();
+      this.timerService.startSubTimer().then((shouldDisqualify) => {
+        if (shouldDisqualify) {
           this.handleDisqualification();
         }
-      } else {
-        this.stopSubTimer();
-      }
-    }, 1000);
-  }
-
-  // Stops the current running subTimer
-  private stopSubTimer(): void {
-    clearInterval(this.subTimerInterval);
-    this.subTimerDisplay = '';
-  }
+      });
+    } else {
+      this.isOutsideFullScreen = false;
+      this.timerService.stopSubTimer();
+    }
+  };
 
   // Called when the user exits fullscreen for more than 10s during the interview
   private handleDisqualification(): void {
@@ -191,7 +173,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
       isDisqualified: this.isDisqualified,
     };
     localStorage.setItem('failData', JSON.stringify(failData));
-    this.cleanupTimers();
+    this.cleanupIntervals();
     this.isInterviewCompleted = true;
     this.isInsideInterview = false;
     this.stopScreenRecording();
@@ -263,7 +245,11 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
       .catch((error) => console.log(error));
     this.detectFaces();
     setTimeout(() => {
-      this.startMainTimer();
+      this.timerService.startMainTimer().then((finished) => {
+        if (finished) {
+          this.handleInterviewEnd();
+        }
+      });
     }, 3000); // Waits for 3s for the video to load
   }
 
@@ -576,7 +562,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
           this.detection = await faceapi
             .detectAllFaces(
               this.videoInput,
-              new faceapi.SsdMobilenetv1Options() // or faceapi.TinyFaceDetectorOptions
+              new faceapi.SsdMobilenetv1Options()
             )
             .withFaceExpressions()
             .withAgeAndGender();
