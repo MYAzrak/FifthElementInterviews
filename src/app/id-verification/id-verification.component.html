@@ -1,1 +1,16 @@
-<p>id-verification works!</p>
+<div class="video-container">
+  <video #video id="video" autoplay muted></video>
+  <b>Please upload or take a photo of your ID. Make sure that your face and name are clear to proceed.</b>
+  <div class="actions">
+    <button (click)="extractText(false)">Take a screenshot</button>
+    <div>
+      <label for="id-img">Only image files are accepted (JPEG, PNG, etc.)</label>
+      <br>
+      <input type="file" id="id-img" (change)="onFileSelected($event)" accept="image/*">
+    </div>
+  </div>
+</div>
+
+<div>
+  <img id="reference-image" src="" hidden />
+</div>
