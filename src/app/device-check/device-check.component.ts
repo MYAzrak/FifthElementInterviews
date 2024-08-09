@@ -81,7 +81,7 @@ export class DeviceCheckComponent implements OnInit, OnDestroy {
     this.faceDetectionInterval = setInterval(async () => {
       const detections = await faceapi.detectAllFaces(
         videoElement,
-        new faceapi.TinyFaceDetectorOptions()
+        new faceapi.SsdMobilenetv1Options()
       );
       this.isFaceDetected = detections.length > 0;
       this.checkDevicesReady();
