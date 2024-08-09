@@ -122,6 +122,10 @@ export class IdVerificationComponent implements OnInit, OnDestroy {
     });
   }
 
+  private resetVerification(): void {
+    this.areFacesMatching = false;
+    this.areNamesMatching = false;
+  }
   private async matchFaces(IDImageSrc: string): Promise<void> {
     // Pauses for 3 seconds before matching
     await new Promise<void>((resolve) =>
@@ -169,6 +173,7 @@ export class IdVerificationComponent implements OnInit, OnDestroy {
         alert(
           "The person in the ID isn't the same person showing on the webcam. Please try again."
         );
+        this.resetVerification();
       } else {
         this.checkIDVerified();
       }
@@ -186,6 +191,7 @@ export class IdVerificationComponent implements OnInit, OnDestroy {
       alert(
         "The name in the ID isn't the same name you applied with. Please try again."
       );
+      this.resetVerification();
     } else {
       this.checkIDVerified();
     }
