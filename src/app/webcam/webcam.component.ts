@@ -108,6 +108,8 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
         faceapi.nets.ssdMobilenetv1.loadFromUri('/assets/models'),
         faceapi.nets.faceExpressionNet.loadFromUri('/assets/models'),
         faceapi.nets.ageGenderNet.loadFromUri('/assets/models'),
+        faceapi.nets.faceLandmark68Net.loadFromUri('/assets/models'),
+        faceapi.nets.faceRecognitionNet.loadFromUri('/assets/models'),
       ]);
     } catch (error) {
       console.log(`Error loading models`, error);
