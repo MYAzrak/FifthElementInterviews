@@ -1,8 +1,10 @@
 import {
   Component,
   ElementRef,
+  EventEmitter,
   OnDestroy,
   OnInit,
+  Output,
   ViewChild,
 } from '@angular/core';
 import { createWorker } from 'tesseract.js';
@@ -16,6 +18,7 @@ import * as faceapi from 'face-api.js';
   styleUrl: './id-verification.component.css',
 })
 export class IdVerificationComponent implements OnInit, OnDestroy {
+  @Output() isIDVerified: EventEmitter<boolean> = new EventEmitter<boolean>();
   private stream: MediaStream | null = null;
 
   // For the screenshot option
@@ -166,6 +169,8 @@ export class IdVerificationComponent implements OnInit, OnDestroy {
         alert(
           "The person in the ID isn't the same person showing on the webcam. Please try again."
         );
+      } else {
+        this.checkIDVerified();
       }
     } catch (error) {
       console.error('Error in face matching:', error);
@@ -181,6 +186,18 @@ export class IdVerificationComponent implements OnInit, OnDestroy {
       alert(
         "The name in the ID isn't the same name you applied with. Please try again."
       );
+    } else {
+      this.checkIDVerified();
     }
+  }
+
+  private checkIDVerified(): void {
+    if (this.areFacesMatching && this.areNamesMatching) {
+      this.verifyID();
+    }
+  }
+
+  private verifyID(): void {
+    this.isIDVerified.emit(true);
   }
 }

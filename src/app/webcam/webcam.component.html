@@ -8,10 +8,17 @@
     @if (showModal === "deviceCheck") {
     <div class="device-check-modal">
       <app-device-check (deviceCheckComplete)="onDeviceCheckComplete($event)"></app-device-check>
-      <button class="next-modal" id="to-screen-record" (click)="showModal = 'screenRecord'"
+      <button class="next-modal" id="to-id-verification" (click)="showModal = 'idVerification'"
         [disabled]="!devicesReady">Next</button>
     </div>
-    } @else if (showModal === "screenRecord") {
+    } @else if (showModal === "idVerification") {
+    <div class="id-verification-modal">
+      <app-id-verification (isIDVerified)="onIDVerifiedComplete($event)"></app-id-verification>
+      <button class="next-modal" id="to-screen-record" (click)="showModal = 'screenRecord'"
+        [disabled]="!idVerified">Next</button>
+    </div>
+    }
+    @else if (showModal === "screenRecord") {
     <div class="screen-record-modal">
       <h1><b>Please be informed that:</b></h1>
       <p>1. You need to position your webcam directly in front of you, ensuring that you are centered

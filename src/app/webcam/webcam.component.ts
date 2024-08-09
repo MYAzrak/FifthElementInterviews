@@ -12,12 +12,13 @@ import { Router, RouterModule } from '@angular/router';
 import * as faceapi from 'face-api.js';
 import * as math from 'mathjs';
 import { DeviceCheckComponent } from '../device-check/device-check.component';
+import { IdVerificationComponent } from '../id-verification/id-verification.component';
 import { TimerService } from '../services/timer.service';
 import { Subscription } from 'rxjs/internal/Subscription';
 @Component({
   selector: 'app-webcam',
   standalone: true,
-  imports: [CommonModule, RouterModule, DeviceCheckComponent],
+  imports: [CommonModule, RouterModule, DeviceCheckComponent, IdVerificationComponent],
   templateUrl: './webcam.component.html',
   styleUrl: './webcam.component.css',
 })
@@ -62,8 +63,9 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   private displaySize: any;
   private videoInput: any;
 
-  public showModal: string = 'deviceCheck'; // or screenRecord or fullscreen;
+  public showModal: string = 'deviceCheck'; // or idVerification or screenRecord or fullscreen;
   public devicesReady: boolean = false;
+  public idVerified: boolean = false;
 
   private isInDevMode: boolean = false; // Assign true to show the canvas (faceapi squares) around the face
 
@@ -238,6 +240,10 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     this.devicesReady = isReady;
   }
 
+  // Handles the completion event from the id-verification component, determining whether the same candidate doing the interview is the same person assigned to that interview
+  public onIDVerifiedComplete(isVerified: boolean): void {
+    this.idVerified = isVerified;
+  }
   // Asks for webcam permission to start the process
   private startVideo(): void {
     this.videoInput = this.video.nativeElement;
