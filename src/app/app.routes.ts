@@ -6,11 +6,10 @@ export const routes: Routes = [
   {
     path: '',
     component: WebcamComponent,
-    title: `FaceAPI-Angular`,
   },
   {
     path: 'stats',
     component: StatsComponent,
-    title: `Interview Statistics`,
+    title: `Interview Results`,
   },
 ];
