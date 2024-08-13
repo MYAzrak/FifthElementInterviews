@@ -244,6 +244,20 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isOutsideFullScreen = false;
   }
 
+  // Method to handle form submission
+  public handleFormSubmit(event: Event) {
+    const inputElement: HTMLInputElement = document.getElementById(
+      'name-input'
+    ) as HTMLInputElement;
+
+    if (inputElement) {
+      this.usernameService.setName(event, inputElement.value);
+    } else {
+      console.error('Input element not found');
+    }
+    this.showModal = 'deviceCheck';
+  }
+
   // Handles the completion event from the device-check component, determining whether the devices (mic and camera) are working properly
   public onDeviceCheckComplete(isReady: boolean): void {
     this.devicesReady = isReady;
@@ -253,6 +267,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   public onIDVerifiedComplete(isVerified: boolean): void {
     this.idVerified = isVerified;
   }
+
   // Asks for webcam permission to start the process
   private startVideo(): void {
     this.videoInput = this.video.nativeElement;
@@ -648,19 +663,5 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
           this.AVG_NUM_OF_FACES_INTERVAL
         );
       });
-  }
-
-  // Method to handle form submission
-  public handleFormSubmit(event: Event) {
-    const inputElement: HTMLInputElement = document.getElementById(
-      'name-input'
-    ) as HTMLInputElement;
-
-    if (inputElement) {
-      this.usernameService.setName(event, inputElement.value);
-    } else {
-      console.error('Input element not found');
-    }
-    this.showModal = 'deviceCheck';
   }
 }
