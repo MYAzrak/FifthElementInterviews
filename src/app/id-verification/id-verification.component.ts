@@ -27,7 +27,7 @@ export class IdVerificationComponent implements OnInit, OnDestroy {
   private canvas: HTMLCanvasElement = document.createElement('canvas');
   private context: CanvasRenderingContext2D;
   public instructionsText: string =
-    'Please upload or take a photo of your ID. Make sure that your face and name are clear to proceed.';
+    'Please upload a picture of your ID.';
 
   // For uploading images option
   private selectedFile: File | null = null;
