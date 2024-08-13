@@ -25,12 +25,14 @@ export class IdVerificationComponent implements OnInit, OnDestroy {
   @ViewChild('video') video!: ElementRef<HTMLVideoElement>;
   private canvas: HTMLCanvasElement = document.createElement('canvas');
   private context: CanvasRenderingContext2D;
+  public instructionsText: string =
+    'Please upload or take a photo of your ID. Make sure that your face and name are clear to proceed.';
 
   // For uploading images option
   private selectedFile: File | null = null;
 
   // Face matching using faceapi.js
-  private candidateName: string = 'Mohammad';
+  private candidateName: string = '';
   public areFacesMatching: boolean = false; // True if the face on the ID matches the face on the webcam
   public areNamesMatching: boolean = false; // True if the name on the ID matches the name we have of the candidate
 
@@ -127,6 +129,10 @@ export class IdVerificationComponent implements OnInit, OnDestroy {
     this.areNamesMatching = false;
   }
   private async matchFaces(IDImageSrc: string): Promise<void> {
+    this.instructionsText =
+      'We are scanning your face to match it with the ID. Please make sure that your face is clear.';
+    document.getElementsByTagName('b')[0].style.color = 'red';
+
     // Pauses for 3 seconds before matching
     await new Promise<void>((resolve) =>
       setTimeout(() => {
