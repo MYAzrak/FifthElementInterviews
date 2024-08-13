@@ -15,10 +15,16 @@ import { DeviceCheckComponent } from '../device-check/device-check.component';
 import { IdVerificationComponent } from '../id-verification/id-verification.component';
 import { TimerService } from '../services/timer.service';
 import { Subscription } from 'rxjs/internal/Subscription';
+import { UsernameService } from '../services/username.service';
 @Component({
   selector: 'app-webcam',
   standalone: true,
-  imports: [CommonModule, RouterModule, DeviceCheckComponent, IdVerificationComponent],
+  imports: [
+    CommonModule,
+    RouterModule,
+    DeviceCheckComponent,
+    IdVerificationComponent,
+  ],
   templateUrl: './webcam.component.html',
   styleUrl: './webcam.component.css',
 })
@@ -63,7 +69,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   private displaySize: any;
   private videoInput: any;
 
-  public showModal: string = 'deviceCheck'; // or idVerification or screenRecord or fullscreen;
+  public showModal: string = 'enterName'; // or deviceCheck or idVerification or screenRecord or fullscreen;
   public devicesReady: boolean = false;
   public idVerified: boolean = false;
 
@@ -80,11 +86,15 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   public subTimerDisplay: string = '00:00';
   private subscriptions: Subscription[] = [];
 
+  // Username service
+  public userNameInput: string = ''; // Variable to bind to input field
+
   constructor(
     private elRef: ElementRef,
     private cdRef: ChangeDetectorRef,
     private router: Router,
-    private timerService: TimerService
+    private timerService: TimerService,
+    private usernameService: UsernameService
   ) {}
 
   // Loading the models
@@ -639,5 +649,20 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
           this.AVG_NUM_OF_FACES_INTERVAL
         );
       });
+  }
+
+  // Method to handle form submission
+  public handleFormSubmit(event: Event) {
+    const inputElement: HTMLInputElement = document.getElementById(
+      'name-input'
+    ) as HTMLInputElement;
+
+    if (inputElement) {
+      console.log(inputElement.value);
+      this.usernameService.setName(event, inputElement.value);
+    } else {
+      console.error('Input element not found');
+    }
+    this.showModal = 'deviceCheck';
   }
 }

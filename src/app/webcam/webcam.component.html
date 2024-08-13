@@ -5,7 +5,14 @@
 
 <div *ngIf="!showWebcam" id="beginModal" class="modal">
   <div class="modal-content">
-    @if (showModal === "deviceCheck") {
+    @if (showModal === "enterName") {
+    <h1>Enter Your Name</h1>
+    <form (submit)="handleFormSubmit($event)">
+      <input type="text" id="name-input" required />
+      <button id="submit" type="submit">Submit</button>
+    </form>
+    }
+    @else if (showModal === "deviceCheck") {
     <div class="device-check-modal">
       <app-device-check (deviceCheckComplete)="onDeviceCheckComplete($event)"></app-device-check>
       <button class="next-modal" id="to-id-verification" (click)="showModal = 'idVerification'"
