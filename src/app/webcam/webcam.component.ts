@@ -12,12 +12,19 @@ import { Router, RouterModule } from '@angular/router';
 import * as faceapi from 'face-api.js';
 import * as math from 'mathjs';
 import { DeviceCheckComponent } from '../device-check/device-check.component';
+import { IdVerificationComponent } from '../id-verification/id-verification.component';
 import { TimerService } from '../services/timer.service';
 import { Subscription } from 'rxjs/internal/Subscription';
+import { UsernameService } from '../services/username.service';
 @Component({
   selector: 'app-webcam',
   standalone: true,
-  imports: [CommonModule, RouterModule, DeviceCheckComponent],
+  imports: [
+    CommonModule,
+    RouterModule,
+    DeviceCheckComponent,
+    IdVerificationComponent,
+  ],
   templateUrl: './webcam.component.html',
   styleUrl: './webcam.component.css',
 })
@@ -62,8 +69,9 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   private displaySize: any;
   private videoInput: any;
 
-  public showModal: string = 'deviceCheck'; // or screenRecord or fullscreen;
+  public showModal: string = 'enterName'; // or deviceCheck or idVerification or screenRecord or fullscreen;
   public devicesReady: boolean = false;
+  public idVerified: boolean = false;
 
   private isInDevMode: boolean = false; // Assign true to show the canvas (faceapi squares) around the face
 
@@ -78,11 +86,15 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   public subTimerDisplay: string = '00:00';
   private subscriptions: Subscription[] = [];
 
+  // Username service
+  public userNameInput: string = ''; // Variable to bind to input field
+
   constructor(
     private elRef: ElementRef,
     private cdRef: ChangeDetectorRef,
     private router: Router,
-    private timerService: TimerService
+    private timerService: TimerService,
+    private usernameService: UsernameService
   ) {}
 
   // Loading the models
@@ -108,6 +120,8 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
         faceapi.nets.ssdMobilenetv1.loadFromUri('/assets/models'),
         faceapi.nets.faceExpressionNet.loadFromUri('/assets/models'),
         faceapi.nets.ageGenderNet.loadFromUri('/assets/models'),
+        faceapi.nets.faceLandmark68Net.loadFromUri('/assets/models'),
+        faceapi.nets.faceRecognitionNet.loadFromUri('/assets/models'),
       ]);
     } catch (error) {
       console.log(`Error loading models`, error);
@@ -236,6 +250,10 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     this.devicesReady = isReady;
   }
 
+  // Handles the completion event from the id-verification component, determining whether the same candidate doing the interview is the same person assigned to that interview
+  public onIDVerifiedComplete(isVerified: boolean): void {
+    this.idVerified = isVerified;
+  }
   // Asks for webcam permission to start the process
   private startVideo(): void {
     this.videoInput = this.video.nativeElement;
@@ -631,5 +649,19 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
           this.AVG_NUM_OF_FACES_INTERVAL
         );
       });
+  }
+
+  // Method to handle form submission
+  public handleFormSubmit(event: Event) {
+    const inputElement: HTMLInputElement = document.getElementById(
+      'name-input'
+    ) as HTMLInputElement;
+
+    if (inputElement) {
+      this.usernameService.setName(event, inputElement.value);
+    } else {
+      console.error('Input element not found');
+    }
+    this.showModal = 'deviceCheck';
   }
 }

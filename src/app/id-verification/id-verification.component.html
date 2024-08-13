@@ -1,0 +1,17 @@
+<div class="video-container">
+  <video #video id="video" autoplay muted></video>
+  <b>{{instructionsText}}</b>
+  <div class="actions">
+    <!-- "Take a screenshot" option is disabled for now. -->
+    <button (click)="extractText(false)" hidden>Take a screenshot</button>
+    <div>
+      <label for="id-img">Only image files are accepted (JPEG, PNG, etc.)</label>
+      <br>
+      <input type="file" id="id-img" (change)="onFileSelected($event)" accept="image/*">
+    </div>
+  </div>
+</div>
+
+<div>
+  <img id="reference-image" src="" hidden />
+</div>
