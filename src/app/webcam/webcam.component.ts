@@ -16,6 +16,7 @@ import { IdVerificationComponent } from '../id-verification/id-verification.comp
 import { TimerService } from '../services/timer.service';
 import { Subscription } from 'rxjs/internal/Subscription';
 import { UsernameService } from '../services/username.service';
+import { environment } from '../../environments/environments';
 @Component({
   selector: 'app-webcam',
   standalone: true,
@@ -72,8 +73,6 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   public showModal: string = 'enterName'; // or deviceCheck or idVerification or screenRecord or fullscreen;
   public devicesReady: boolean = false;
   public idVerified: boolean = false;
-
-  private isInDevMode: boolean = false; // Assign true to show the canvas (faceapi squares) around the face
 
   // For screen recording
   private screenCaptureRecorder: MediaRecorder | null = null;
@@ -601,7 +600,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
             .getContext('2d')
             .clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-          if (this.isInDevMode) {
+          if (environment.isInDevMode) {
             faceapi.draw.drawDetections(this.canvas, this.resizedDetections);
             faceapi.draw.drawFaceExpressions(
               this.canvas,

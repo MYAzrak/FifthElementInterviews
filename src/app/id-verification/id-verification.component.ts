@@ -10,6 +10,7 @@ import {
 import { createWorker } from 'tesseract.js';
 import * as faceapi from 'face-api.js';
 import { UsernameService } from '../services/username.service';
+import { environment } from '../../environments/environments';
 
 @Component({
   selector: 'app-id-verification',
@@ -130,6 +131,7 @@ export class IdVerificationComponent implements OnInit, OnDestroy {
     this.areFacesMatching = false;
     this.areNamesMatching = false;
   }
+
   private async matchFaces(IDImageSrc: string): Promise<void> {
     this.instructionsText =
       'We are scanning your face to match it with the ID. Please make sure that your face is clear.';
@@ -159,7 +161,7 @@ export class IdVerificationComponent implements OnInit, OnDestroy {
         throw new Error('No face detected in the reference image');
 
       const faceMatcher: faceapi.FaceMatcher = new faceapi.FaceMatcher(
-        referenceFaceDescriptor
+        referenceFaceDescriptor, environment.distanceThreshold
       );
 
       // Matching the 2 faces
