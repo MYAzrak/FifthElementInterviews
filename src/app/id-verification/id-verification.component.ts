@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { createWorker } from 'tesseract.js';
 import * as faceapi from 'face-api.js';
+import { UsernameService } from '../services/username.service';
 
 @Component({
   selector: 'app-id-verification',
@@ -36,8 +37,9 @@ export class IdVerificationComponent implements OnInit, OnDestroy {
   public areFacesMatching: boolean = false; // True if the face on the ID matches the face on the webcam
   public areNamesMatching: boolean = false; // True if the name on the ID matches the name we have of the candidate
 
-  constructor() {
+  constructor(private usernameService: UsernameService) {
     this.context = this.canvas.getContext('2d') as CanvasRenderingContext2D;
+    this.candidateName = this.usernameService.getName();
   }
 
   ngOnInit(): void {

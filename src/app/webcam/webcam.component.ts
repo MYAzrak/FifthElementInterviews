@@ -658,7 +658,6 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     ) as HTMLInputElement;
 
     if (inputElement) {
-      console.log(inputElement.value);
       this.usernameService.setName(event, inputElement.value);
     } else {
       console.error('Input element not found');
