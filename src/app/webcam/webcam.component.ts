@@ -13,10 +13,13 @@ import * as faceapi from 'face-api.js';
 import * as math from 'mathjs';
 import { DeviceCheckComponent } from '../device-check/device-check.component';
 import { IdVerificationComponent } from '../id-verification/id-verification.component';
-import { TimerService } from '../services/timer.service';
 import { Subscription } from 'rxjs/internal/Subscription';
-import { UsernameService } from '../services/username.service';
 import { environment } from '../../environments/environments';
+import { TimerService } from '../services/timer.service';
+import { UsernameService } from '../services/username.service';
+import { FaceDetectionService } from '../services/face-detection.service';
+import { DataProcessingService } from '../services/data-processing.service';
+import { ScreenRecordingService } from '../services/screen-recording.service';
 @Component({
   selector: 'app-webcam',
   standalone: true,
@@ -75,10 +78,6 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   public idVerified: boolean = false;
 
   // For screen recording
-  private screenCaptureRecorder: MediaRecorder | null = null;
-  private screenCaptureStream: MediaStream | null = null;
-  private isInterviewCompleted: boolean = false;
-  private isInsideInterview: boolean = false;
 
   // From timer service
   public mainTimerDisplay: string = '00:00';
@@ -93,12 +92,15 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     private cdRef: ChangeDetectorRef,
     private router: Router,
     private timerService: TimerService,
-    private usernameService: UsernameService
+    private usernameService: UsernameService,
+    private faceDetectionService: FaceDetectionService,
+    private dataProcessingService: DataProcessingService,
+    private screenRecordingService: ScreenRecordingService
   ) {}
 
   // Loading the models
   ngOnInit(): void {
-    this.loadFaceAPIModels();
+    this.faceDetectionService.loadFaceAPIModels();
     this.subscribeToTimerDisplays();
   }
 
@@ -110,21 +112,6 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cleanupIntervals();
     this.removeFullscreenListener();
     this.subscriptions.forEach((sub) => sub.unsubscribe());
-  }
-
-  // Loads FaceAPI models on initialization
-  private async loadFaceAPIModels(): Promise<void> {
-    try {
-      await Promise.all([
-        faceapi.nets.ssdMobilenetv1.loadFromUri('/assets/models'),
-        faceapi.nets.faceExpressionNet.loadFromUri('/assets/models'),
-        faceapi.nets.ageGenderNet.loadFromUri('/assets/models'),
-        faceapi.nets.faceLandmark68Net.loadFromUri('/assets/models'),
-        faceapi.nets.faceRecognitionNet.loadFromUri('/assets/models'),
-      ]);
-    } catch (error) {
-      console.log(`Error loading models`, error);
-    }
   }
 
   // Syncs between the mainTimerDisplay and subTimerDisplay in timer service and webcam component
@@ -153,9 +140,9 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Called when the mainTimer ends
   private handleInterviewEnd(): void {
-    this.isInterviewCompleted = true;
-    this.isInsideInterview = false;
-    this.stopScreenRecording(); // Stop recording before routing to /stats
+    this.screenRecordingService.setIsInterviewCompleted(true);
+    this.screenRecordingService.setIsInsideInterview(false);
+    this.screenRecordingService.stopRecording(); // Stop recording before routing to /stats
     this.saveData();
     this.cleanupIntervals();
     setTimeout(() => {
@@ -187,9 +174,9 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     };
     localStorage.setItem('failData', JSON.stringify(failData));
     this.cleanupIntervals();
-    this.isInterviewCompleted = true;
-    this.isInsideInterview = false;
-    this.stopScreenRecording();
+    this.screenRecordingService.setIsInterviewCompleted(true);
+    this.screenRecordingService.setIsInsideInterview(false);
+    this.screenRecordingService.stopRecording();
     this.router.navigate(['/stats']);
   }
 
@@ -206,10 +193,23 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
+  // Called when "Start Recording" button is pressed -> Calls startRecording in the screenRecordService
+  public startScreenRecording(): void {
+    this.screenRecordingService.startRecording(
+      this.changeModal.bind(this),
+      this.changeCaptureButtons.bind(this),
+      this.highlightText.bind(this)
+    );
+  }
+
+  public changeModal(modalName: string): void {
+    this.showModal = modalName;
+  }
+
   // Called when the button id="begin" is pressed
   public beginInterview(): void {
     localStorage.clear();
-    this.isInsideInterview = true;
+    this.screenRecordingService.setIsInsideInterview(true);
     this.showWebcam = true;
     document.documentElement.requestFullscreen();
     this.cdRef.detectChanges(); // Force change detection
@@ -458,72 +458,8 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     localStorage.setItem('webcamData', JSON.stringify(data));
   }
 
-  // Called when the button id="capture" is pressed for screen recording
-  public async screenRecord(): Promise<void> {
-    try {
-      // Screen Capture API
-      this.screenCaptureStream = await navigator.mediaDevices.getDisplayMedia({
-        video: {
-          displaySurface: 'monitor',
-        },
-      });
-
-      // Check if the user selected the entire screen
-      const videoTrack = this.screenCaptureStream.getVideoTracks()[0];
-      if (videoTrack.getSettings().displaySurface !== 'monitor') {
-        this.screenCaptureStream.getTracks().forEach((track) => track.stop());
-        throw new Error('Please select the entire screen for recording.');
-      }
-
-      // MediaStream Recording API
-      this.screenCaptureRecorder = new MediaRecorder(this.screenCaptureStream);
-      this.screenCaptureRecorder.start();
-
-      this.screenCaptureRecorder.addEventListener('dataavailable', (evt) => {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(evt.data);
-        a.download = 'screen_capture.mp4';
-        a.click();
-      });
-
-      this.screenCaptureRecorder.addEventListener('stop', () => {
-        // Candidate stopped recording before entering the interview
-        if (!this.isInterviewCompleted && !this.isInsideInterview) {
-          alert(
-            'Please do not stop the screen recording before finishing the interview.'
-          );
-          this.showModal = 'screenRecord';
-          this.changeCaptureButtons(true);
-        }
-
-        // Candidate stopped recording during the interview
-        if (!this.isInterviewCompleted && this.isInsideInterview) {
-          this.screenRecord();
-        }
-      });
-
-      this.changeCaptureButtons(false);
-    } catch (err) {
-      console.error('Error starting screen recording:', err);
-      if (err instanceof Error && err.name === 'NotAllowedError') {
-        alert(
-          'Screen recording permission denied. Please try again and allow screen recording.'
-        );
-        if (!this.isInterviewCompleted && this.isInsideInterview) {
-          this.screenRecord();
-        }
-      } else {
-        alert('Please try again and ensure you select the "Entire Screen".');
-        if (!this.isInterviewCompleted && this.isInsideInterview) {
-          this.screenRecord();
-        }
-      }
-      this.highlightText();
-    }
-  }
-
   // Enables or disables the captureButton and toFullscreenButton for screen recording
-  private changeCaptureButtons(enableButtons: boolean): void {
+  public changeCaptureButtons(enableButtons: boolean): void {
     let toFullscreenButton = document.getElementById(
       'to-fullscreen'
     ) as HTMLButtonElement;
@@ -548,7 +484,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Highlights "Entire Screen" when the user choose another option
-  private highlightText(): void {
+  public highlightText(): void {
     const entireScreenSpan = document.getElementById(
       'entire-screen'
     ) as HTMLElement;
@@ -556,17 +492,6 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
       entireScreenSpan.style.fontWeight = 'bold';
       entireScreenSpan.style.color = 'red';
     }
-  }
-
-  // Stops the screen recording in case of disqualification or interview end
-  private stopScreenRecording(): void {
-    if (
-      this.screenCaptureRecorder &&
-      this.screenCaptureRecorder.state !== 'inactive'
-    ) {
-      this.screenCaptureRecorder.stop();
-    }
-    this.screenCaptureStream?.getTracks().forEach((track) => track.stop());
   }
 
   // Contains the faceapi logic for extracting the information from the candidate's face

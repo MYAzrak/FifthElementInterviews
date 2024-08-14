@@ -16,7 +16,8 @@ export class FaceDetectionService {
 
   constructor() {}
 
-  async loadModels(): Promise<void> {
+  // Loads FaceAPI models on initialization of webcam component
+  async loadFaceAPIModels(): Promise<void> {
     try {
       await Promise.all([
         faceapi.nets.ssdMobilenetv1.loadFromUri('/assets/models'),
