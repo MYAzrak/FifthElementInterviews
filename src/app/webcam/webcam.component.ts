@@ -34,25 +34,15 @@ import { ScreenRecordingService } from '../services/screen-recording.service';
 })
 export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   // Interview's video and canvas (for faceapi)
-  @ViewChild('video')
-  private video!: ElementRef;
-  @ViewChild('canvas')
-  private canvasRef!: ElementRef;
+  @ViewChild('video', { static: false })
+  private video!: ElementRef<HTMLVideoElement>;
+  @ViewChild('canvas', { static: false })
+  private canvasRef!: ElementRef<HTMLCanvasElement>;
 
   private detectionInterval!: NodeJS.Timeout;
   private avgNumOfFacesInterval!: NodeJS.Timeout;
   private avgAgeGenderInterval!: NodeJS.Timeout;
   private avgExpressionInterval!: NodeJS.Timeout;
-
-  private highestExpressions: string[] = []; // Saves the highest expression every second for 1m (then resets)
-  private avgExpressions: string[] = []; // Saves the average expression detected over 1-minute intervals
-  private predictedAges: number[] = []; // Saves the last 30 predicted ages
-  private avgAges: number[] = []; // Saves the average age calculated over 10-seconds intervals
-  private predictedGenders: string[] = []; // Saves the predicted genders every second for 10s (then resets)
-  private avgGenders: number[] = []; // Saves the average gender calculated over 10-seconds intervals
-  private numOfFacesDetected: number[] = []; // Saves the # of faces detected every second for 5s (then resets)
-  private avgNumOfFacesDetected: number[] = []; // Save the average # of faces detected over 5-seconds intervals
-  private faceCoverSecondsCount = 0; // Saves the cumulative time in seconds that the face was covered
 
   private isDisqualified: boolean = false;
   public showWebcam: boolean = false;
@@ -66,18 +56,11 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   public readonly HEIGHT = 720;
 
   // facepai
-  private detection: any;
-  private resizedDetections: any;
-  private canvas: any;
-  private canvasEl: any;
-  private displaySize: any;
   private videoInput: any;
 
   public showModal: string = 'enterName'; // or deviceCheck or idVerification or screenRecord or fullscreen;
   public devicesReady: boolean = false;
   public idVerified: boolean = false;
-
-  // For screen recording
 
   // From timer service
   public mainTimerDisplay: string = '00:00';
@@ -87,16 +70,19 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
   // Username service
   public userNameInput: string = ''; // Variable to bind to input field
 
+  faceDetectionService;
   constructor(
     private elRef: ElementRef,
     private cdRef: ChangeDetectorRef,
     private router: Router,
     private timerService: TimerService,
     private usernameService: UsernameService,
-    private faceDetectionService: FaceDetectionService,
+    // private faceDetectionService: FaceDetectionService,
     private dataProcessingService: DataProcessingService,
     private screenRecordingService: ScreenRecordingService
-  ) {}
+  ) {
+    this.faceDetectionService = new FaceDetectionService();
+  }
 
   // Loading the models
   ngOnInit(): void {
@@ -106,6 +92,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.cdRef.detectChanges();
+    // this.beginInterview();
   }
 
   ngOnDestroy(): void {
@@ -143,7 +130,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
     this.screenRecordingService.setIsInterviewCompleted(true);
     this.screenRecordingService.setIsInsideInterview(false);
     this.screenRecordingService.stopRecording(); // Stop recording before routing to /stats
-    this.saveData();
+    this.dataProcessingService.saveData();
     this.cleanupIntervals();
     setTimeout(() => {
       this.router.navigate(['/stats']);
@@ -208,6 +195,7 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Called when the button id="begin" is pressed
   public beginInterview(): void {
+    this.mainTimerDisplay = '00:00';
     localStorage.clear();
     this.screenRecordingService.setIsInsideInterview(true);
     this.showWebcam = true;
@@ -275,7 +263,9 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
       .getUserMedia({ video: {}, audio: false })
       .then((stream) => (this.videoInput.srcObject = stream))
       .catch((error) => console.log(error));
-    this.detectFaces();
+    setTimeout(() => {
+      this.detectFaces();
+    }, 3000);
     setTimeout(() => {
       this.timerService.startMainTimer().then((finished) => {
         if (finished) {
@@ -283,179 +273,6 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       });
     }, 3000); // Waits for 3s for the video to load
-  }
-
-  // Saves the top expression at each detection
-  private saveTopExpression(detections: any[]): void {
-    detections.forEach((detection) => {
-      const expressions = detection.expressions;
-      const expressionsArray = Object.entries(expressions);
-      expressionsArray.sort((a: any, b: any) => b[1] - a[1]);
-      let topExpression = expressionsArray[0][0];
-      this.highestExpressions.push(topExpression);
-      // console.log('Top Expression:', topExpression);
-      // console.log('All Highest Expressions:', this.highestExpressions);
-    });
-  }
-
-  // Saves the average expression (called every 1 minutes)
-  private applyBellCurve(): void {
-    const highestExpressionsCopy = [...this.highestExpressions];
-
-    // Count the frequency of each expression
-    const frequencyMap = highestExpressionsCopy.reduce((acc, expr) => {
-      acc[expr] = (acc[expr] || 0) + 1;
-      return acc;
-    }, {} as { [key: string]: number });
-    // console.log(`frequencyMap:`, frequencyMap);
-
-    const uniqueExpressions = Object.keys(frequencyMap);
-    const frequencies = uniqueExpressions.map((expr) => frequencyMap[expr]);
-    // console.log(`uniqueExpressions:`, uniqueExpressions);
-    // console.log(`frequencies:`, frequencies);
-
-    // No faces detected
-    if (uniqueExpressions.length === 0) {
-      this.avgExpressions.push(`neutral`);
-      return;
-    }
-
-    // The expression during the interval did not change
-    if (uniqueExpressions.length === 1) {
-      this.avgExpressions.push(uniqueExpressions[0]);
-      return;
-    }
-
-    const mean: number = math.mean(frequencies);
-    const stdDev: number = Number(math.std(frequencies));
-
-    // Apply Gaussian (normal) distribution to frequencies
-    const weights = frequencies.map(
-      (freq) =>
-        Math.exp(-0.5 * Math.pow((freq - mean) / stdDev, 2)) /
-        (stdDev * Math.sqrt(2 * Math.PI))
-    );
-    // console.log(`weights:`, weights);
-
-    // Calculate weighted sum
-    const weightedSum = uniqueExpressions.reduce(
-      (sum, expr, index) => sum + frequencyMap[expr] * weights[index],
-      0
-    );
-    // console.log(`weightedSum:`, weightedSum);
-    const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
-    // console.log(`totalWeight:`, totalWeight);
-    const weightedMean = weightedSum / totalWeight;
-    // console.log(`weightedMean:`, weightedMean);
-
-    // Find the expression with frequency closest to the weighted mean
-    const closestExpression = uniqueExpressions.reduce(
-      (closest, expr) => {
-        const diff = Math.abs(frequencyMap[expr] - weightedMean);
-        return diff < closest.diff ? { expression: expr, diff: diff } : closest;
-      },
-      { expression: '', diff: Infinity }
-    );
-    this.highestExpressions = [];
-    this.avgExpressions.push(closestExpression.expression);
-    // console.log(`closestExpress`, closestExpression);
-    // console.log(
-    //   `The average face expression after 1m is "${closestExpression.expression}"`
-    // );
-  }
-
-  // Interpolates age predictions
-  private interpolateAgePredictions(age: number): number {
-    this.predictedAges = [age].concat(this.predictedAges).slice(0, 30);
-    const avgPredictedAge =
-      this.predictedAges.reduce((total, a) => total + a, 0) /
-      this.predictedAges.length;
-    return avgPredictedAge;
-  }
-
-  // Saves the average age (called every 10 seconds)
-  private saveAvgAge(): void {
-    let lastTenPredictedAges: number[] = this.predictedAges.slice(-10);
-    let sum: number = lastTenPredictedAges.reduce((acc, val) => acc + val, 0);
-    let avgAge: number = sum / lastTenPredictedAges.length;
-    if (avgAge) {
-      this.avgAges.push(avgAge);
-    } else {
-      this.avgAges.push(0);
-    }
-    // console.log(`The average age after 10s is "${avgAge}"`);
-  }
-
-  // Saves the gender at each detection
-  private saveGender(detections: any[]): void {
-    this.predictedGenders.push(detections[0].gender);
-  }
-
-  // Saves the average gender (called every 10 seconds)
-  private saveAvgGender(): void {
-    const predictedGendersCopy = [...this.predictedGenders];
-    let maleCount = 0;
-    let femaleCount = 0;
-    for (const gender of predictedGendersCopy) {
-      if (gender === 'male') maleCount++;
-      else femaleCount++;
-    }
-
-    let avgGender = maleCount >= femaleCount ? 0 : 1;
-
-    this.predictedGenders = [];
-    this.avgGenders.push(avgGender);
-    // console.log(`The average gender after 10s is "${avgGender}"`);
-  }
-
-  // Saves number of faces detected
-  private saveNumOfFacesDetected(detections: any[]): void {
-    this.numOfFacesDetected.push(detections.length);
-  }
-
-  // Saves the average number of faces detected (called every 5)
-  private saveAvgNumOfFacesDetected(): void {
-    const numOfFacesDetectedCopy = [...this.numOfFacesDetected];
-    let sum = numOfFacesDetectedCopy.reduce((acc, val) => acc + val, 0);
-    let avgNum = sum / numOfFacesDetectedCopy.length;
-
-    this.numOfFacesDetected = [];
-    if (avgNum) {
-      this.avgNumOfFacesDetected.push(avgNum);
-    } else {
-      this.avgNumOfFacesDetected.push(0);
-    }
-    // console.log(`The average number of face detected after 5s is "${avgNum}"`);
-  }
-
-  // Alerts the user if their faces isn't visible + increments faceCoverSecondsCount
-  private alertUser(): void {
-    this.faceCoverSecondsCount++;
-    // alert("No face detected! Please ensure your face is visible to the camera."); // Could be changed afterwards since alert() stops the execution of the program
-    // console.log(`The face was covered for ${this.faceCoverSecondsCount}s`);
-  }
-
-  // Saves the data in local storage to be retrieved in the stats page
-  private saveData(): void {
-    // NOTE: WHEN THE USER `RESTART` THE PROCESS, THIS ISSUE DOES NOT OCCUR =>
-    // REMOVING THE FIRST ELEMENT REMOVES A CRUCIAL VALUE FROM EACH ARRAY
-    if (this.avgAges[0] === 0) {
-      // Remove the first element of each array since these were saved at second = 0
-      // where the no expressions/age/gender/faces were detected yet
-      this.avgExpressions.shift();
-      this.avgAges.shift();
-      this.avgGenders.shift();
-      this.avgNumOfFacesDetected.shift();
-    }
-
-    const data = {
-      avgExpressions: this.avgExpressions,
-      avgAges: this.avgAges,
-      avgGenders: this.avgGenders,
-      avgNumOfFacesDetected: this.avgNumOfFacesDetected,
-      faceCoverSecondsCount: this.faceCoverSecondsCount,
-    };
-    localStorage.setItem('webcamData', JSON.stringify(data));
   }
 
   // Enables or disables the captureButton and toFullscreenButton for screen recording
@@ -496,97 +313,50 @@ export class WebcamComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Contains the faceapi logic for extracting the information from the candidate's face
   private async detectFaces(): Promise<void> {
-    this.elRef.nativeElement
-      .querySelector('video')
-      .addEventListener('play', async () => {
-        this.canvas = faceapi.createCanvasFromMedia(this.videoInput);
-        this.canvasEl = this.canvasRef.nativeElement;
-        this.canvasEl.appendChild(this.canvas);
+    const videoElement = this.video.nativeElement as HTMLVideoElement;
+    const canvasElement = this.canvasRef.nativeElement as HTMLCanvasElement;
+    console.log(videoElement);
+    console.log(canvasElement);
 
-        this.canvas.setAttribute('id', 'canvass');
-        this.canvas.setAttribute(
-          'style',
-          `position: absolute; top: 0; left: 0;`
+    videoElement.addEventListener('play', async () => {
+      this.detectionInterval = setInterval(async () => {
+        const resizedDetections = await this.faceDetectionService.detectFaces(
+          videoElement,
+          canvasElement
         );
 
-        this.displaySize = {
-          width: this.videoInput.width,
-          height: this.videoInput.height,
-        };
-        faceapi.matchDimensions(this.canvas, this.displaySize);
-
-        this.detectionInterval = setInterval(async () => {
-          this.detection = await faceapi
-            .detectAllFaces(
-              this.videoInput,
-              new faceapi.SsdMobilenetv1Options()
-            )
-            .withFaceExpressions()
-            .withAgeAndGender();
-
-          this.resizedDetections = faceapi.resizeResults(
-            this.detection,
-            this.displaySize
+        // Only call drawDetections if canvasElement is valid
+        if (canvasElement && canvasElement.getContext('2d')) {
+          this.faceDetectionService.drawDetections(
+            canvasElement,
+            resizedDetections,
+            { width: this.WIDTH, height: this.HEIGHT }
           );
-
-          // Always call interpolateAgePredictions and store the results
-          const interpolatedAges = this.resizedDetections.map(
-            (detection: any) => {
-              return this.interpolateAgePredictions(detection.age);
-            }
+        } else {
+          console.error(
+            'Canvas element is not available or not correctly initialized.'
           );
+        }
 
-          this.canvas
-            .getContext('2d')
-            .clearRect(0, 0, this.canvas.width, this.canvas.height);
+        if (resizedDetections.length === 0) {
+          this.dataProcessingService.incrementFaceCoverCount();
+        }
+      }, this.DETECTION_INTERVAL);
 
-          if (environment.isInDevMode) {
-            faceapi.draw.drawDetections(this.canvas, this.resizedDetections);
-            faceapi.draw.drawFaceExpressions(
-              this.canvas,
-              this.resizedDetections
-            );
+      this.avgExpressionInterval = setInterval(
+        () => this.dataProcessingService.applyBellCurve(),
+        this.AVG_EXPRESSION_INTERVAL
+      );
 
-            this.resizedDetections.forEach((detection: any, index: number) => {
-              const { age, gender, genderProbability } = detection;
-              const interpolatedAge = interpolatedAges[index];
-              new faceapi.draw.DrawTextField(
-                [
-                  `${Math.round(interpolatedAge)} years`,
-                  `${gender} (${faceapi.utils.round(genderProbability)})`,
-                ],
-                detection.detection.box.bottomRight
-              ).draw(this.canvas);
-            });
-          }
+      this.avgAgeGenderInterval = setInterval(() => {
+        this.dataProcessingService.saveAvgAge();
+        this.dataProcessingService.saveAvgGender();
+      }, this.AVG_AGE_GENDER_INTERVAL);
 
-          // Alerts the user if their face isn't showing
-          if (this.resizedDetections.length === 0) {
-            this.alertUser();
-          } else {
-            this.saveTopExpression(this.resizedDetections);
-            this.saveGender(this.resizedDetections);
-            this.saveNumOfFacesDetected(this.resizedDetections);
-          }
-        }, this.DETECTION_INTERVAL);
-
-        // Saves the average expression after 1m
-        this.avgExpressionInterval = setInterval(
-          () => this.applyBellCurve(),
-          this.AVG_EXPRESSION_INTERVAL
-        );
-
-        // Saves the average age and gender every 10s
-        this.avgAgeGenderInterval = setInterval(() => {
-          this.saveAvgAge();
-          this.saveAvgGender();
-        }, this.AVG_AGE_GENDER_INTERVAL);
-
-        // Saves the average number of faces detected every 5s
-        this.avgNumOfFacesInterval = setInterval(
-          () => this.saveAvgNumOfFacesDetected(),
-          this.AVG_NUM_OF_FACES_INTERVAL
-        );
-      });
+      this.avgNumOfFacesInterval = setInterval(
+        () => this.dataProcessingService.saveAvgNumOfFacesDetected(),
+        this.AVG_NUM_OF_FACES_INTERVAL
+      );
+    });
   }
 }

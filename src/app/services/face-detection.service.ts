@@ -1,10 +1,10 @@
-import { Injectable } from '@angular/core';
+// import { Injectable } from '@angular/core';
 import * as faceapi from 'face-api.js';
 import { BehaviorSubject, Observable } from 'rxjs';
 
-@Injectable({
-  providedIn: 'root',
-})
+// @Injectable({
+//   providedIn: 'root',
+// })
 export class FaceDetectionService {
   private detectionSubject = new BehaviorSubject<any>(null);
   public detection$: Observable<any> = this.detectionSubject.asObservable();
@@ -14,10 +14,8 @@ export class FaceDetectionService {
   private predictedGenders: string[] = [];
   private numOfFacesDetected: number[] = [];
 
-  constructor() {}
-
   // Loads FaceAPI models on initialization of webcam component
-  async loadFaceAPIModels(): Promise<void> {
+  public async loadFaceAPIModels(): Promise<void> {
     try {
       await Promise.all([
         faceapi.nets.ssdMobilenetv1.loadFromUri('/assets/models'),
@@ -31,7 +29,7 @@ export class FaceDetectionService {
     }
   }
 
-  async detectFaces(
+  public async detectFaces(
     videoInput: HTMLVideoElement,
     canvas: HTMLCanvasElement
   ): Promise<any> {
@@ -105,13 +103,6 @@ export class FaceDetectionService {
 
   public getNumOfFacesDetected(): number[] {
     return this.numOfFacesDetected;
-  }
-
-  public resetData(): void {
-    this.highestExpressions = [];
-    this.predictedAges = [];
-    this.predictedGenders = [];
-    this.numOfFacesDetected = [];
   }
 
   public drawDetections(

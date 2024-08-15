@@ -5,17 +5,15 @@ import * as math from 'mathjs';
   providedIn: 'root',
 })
 export class DataProcessingService {
-  private highestExpressions: string[] = [];
-  private avgExpressions: string[] = [];
-  private predictedAges: number[] = [];
-  private avgAges: number[] = [];
-  private predictedGenders: string[] = [];
-  private avgGenders: number[] = [];
-  private numOfFacesDetected: number[] = [];
-  private avgNumOfFacesDetected: number[] = [];
-  private faceCoverSecondsCount = 0;
-
-  constructor() {}
+  private highestExpressions: string[] = []; // Saves the highest expression every second for 1m (then resets)
+  private avgExpressions: string[] = []; // Saves the average expression detected over 1-minute intervals
+  private predictedAges: number[] = []; // Saves the last 30 predicted ages
+  private avgAges: number[] = []; // Saves the average age calculated over 10-seconds intervals
+  private predictedGenders: string[] = []; // Saves the predicted genders every second for 10s (then resets)
+  private avgGenders: number[] = []; // Saves the average gender calculated over 10-seconds intervals
+  private numOfFacesDetected: number[] = []; // Saves the # of faces detected every second for 5s (then resets)
+  private avgNumOfFacesDetected: number[] = []; // Save the average # of faces detected over 5-seconds intervals
+  private faceCoverSecondsCount = 0; // Saves the cumulative time in seconds that the face was covered
 
   saveTopExpression(expressions: any): void {
     const expressionsArray = Object.entries(expressions);
@@ -133,7 +131,10 @@ export class DataProcessingService {
     this.faceCoverSecondsCount++;
   }
 
+  // Saves the data in local storage to be retrieved in the stats page
   saveData(): void {
+    // Remove the first element of each array since these were saved at second = 0
+    // where the no expressions/age/gender/faces were detected yet
     if (this.avgAges[0] === 0) {
       this.avgExpressions.shift();
       this.avgAges.shift();
@@ -149,27 +150,5 @@ export class DataProcessingService {
       faceCoverSecondsCount: this.faceCoverSecondsCount,
     };
     localStorage.setItem('webcamData', JSON.stringify(data));
-  }
-
-  getData(): any {
-    return {
-      avgExpressions: this.avgExpressions,
-      avgAges: this.avgAges,
-      avgGenders: this.avgGenders,
-      avgNumOfFacesDetected: this.avgNumOfFacesDetected,
-      faceCoverSecondsCount: this.faceCoverSecondsCount,
-    };
-  }
-
-  resetData(): void {
-    this.highestExpressions = [];
-    this.avgExpressions = [];
-    this.predictedAges = [];
-    this.avgAges = [];
-    this.predictedGenders = [];
-    this.avgGenders = [];
-    this.numOfFacesDetected = [];
-    this.avgNumOfFacesDetected = [];
-    this.faceCoverSecondsCount = 0;
   }
 }
