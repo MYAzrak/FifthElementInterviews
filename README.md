@@ -8,6 +8,7 @@ This Angular-based project provides an AI-powered interview platform for compani
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Running the Application](#running-the-application)
+- [Hosting and Deployment](#hosting-and-deployment)
 - [Usage](#usage)
 - [Privacy Considerations](#privacy-considerations)
 - [Technical Overview](#technical-overview)
