@@ -42,7 +42,7 @@ This Angular-based project provides an AI-powered interview platform for compani
 2. Navigate to the project directory:
 
    ```sh
-   cd FaceAPI-Angular
+   cd FifthElementInterviews
    ```
 
 3. Install dependencies:
@@ -60,6 +60,12 @@ ng serve
 ```
 
 Navigate to `http://localhost:4200/` in your browser. The application will automatically reload if you change any of the source files.
+
+## Hosting and Deployment
+
+- The application is hosted on Firebase and can be accessed at: <https://fifthelement-interviews.web.app/>.
+- The project is integrated with Firebase for CI/CD, ensuring that any changes pushed to the main branch are automatically deployed to the live site.
+- The CI/CD pipeline is set up using GitHub Actions. This automates the build, test, and deployment process, making sure that the application is always up-to-date.
 
 ## Usage
 
@@ -87,6 +93,13 @@ The webcam component (`WebcamComponent`) handles the following:
 - Fullscreen enforcement
 - Data collection for facial expressions, age, gender, etc.
 
+### ID Verification Component
+
+The id-verification component (`IdVerificationComponent`) handles the following:
+
+- Name matching: Extracts the name from the ID using using [tesseract.js](https://github.com/naptha/tesseract.js#tesseractjs) and matches it with the name provided in the beginning.
+- Face matching: Verifies that the face showing on the webcam is the same face provided on the ID using [face-api.js](https://github.com/justadudewhohacks/face-api.js).
+
 ### Stats Component
 
 The stats component (`StatsComponent`) provides:
@@ -101,10 +114,3 @@ The device-check component (`DeviceCheckComponent`) ensures the functionality of
 
 - Webcam Functionality: Verifies that the webcam is working and utilizes [face-api.js](https://github.com/justadudewhohacks/face-api.js) to make sure that candidate's face is visible
 - Microphone Functionality: Checks that the microphone is operational
-
-### ID Verification Component
-
-The id-verification component (`IdVerificationComponent`) handles the following:
-
-- Name matching: Extracts the name from the ID using using [tesseract.js](https://github.com/naptha/tesseract.js#tesseractjs) and matches it with the name provided in the beginning.
-- Face matching: Verifies that the face showing on the webcam is the same face provided on the ID using [face-api.js](https://github.com/justadudewhohacks/face-api.js).
